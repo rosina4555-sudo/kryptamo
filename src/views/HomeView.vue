@@ -47,7 +47,7 @@ onUnmounted(() => {
 <template>
   <div class="min-h-screen">
     <header class="sticky top-0 z-20 border-b border-line bg-mist/95">
-      <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
+      <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 sm:px-10 md:px-12">
         <span class="flex items-center gap-2.5">
           <img src="/kryptamo.png" alt="Kryptamo logo" class="h-9 w-auto" />
           <span class="font-display text-xl font-semibold text-ink">Kryptamo</span>
@@ -69,15 +69,15 @@ onUnmounted(() => {
       </div>
     </header>
 
-    <main class="mx-auto max-w-7xl px-4">
-      <section class="relative overflow-hidden rounded-sheet bg-ink px-6 pt-10 pb-24 sm:px-10 md:px-12 md:pt-16 md:pb-28">
+    <main>
+      <section class="relative overflow-hidden bg-ink">
         <div
           class="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 md:inset-y-0 md:left-auto md:right-0 md:h-full md:w-[58%]"
           aria-hidden="true"
         >
           <img src="/hero-city.webp" alt="" class="h-full w-full object-cover" />
           <div
-            class="absolute inset-0 bg-gradient-to-t from-ink via-ink/55 to-transparent md:bg-gradient-to-r md:from-ink md:via-ink/45 md:to-transparent"
+            class="absolute inset-0 bg-gradient-to-b from-ink via-ink/35 to-ink/75 md:bg-gradient-to-r md:from-ink md:via-ink/50 md:to-transparent"
           ></div>
         </div>
 
@@ -90,7 +90,7 @@ onUnmounted(() => {
           aria-hidden="true"
         ></div>
 
-        <div class="relative grid items-center gap-12 md:grid-cols-2 md:gap-16">
+        <div class="relative mx-auto grid max-w-7xl items-center gap-12 px-6 pt-10 pb-24 sm:px-10 md:grid-cols-2 md:gap-16 md:px-12 md:pt-16 md:pb-28">
           <div>
             <p class="flex items-center gap-2.5 text-sm text-white/70 tabular">
               <span class="h-1.5 w-1.5 rounded-[2px] bg-white"></span>
@@ -125,10 +125,10 @@ onUnmounted(() => {
         </div>
       </section>
 
-      <section
-        id="rates"
-        class="grid gap-12 border-b border-line px-6 py-14 sm:px-10 md:grid-cols-2 md:items-center md:gap-16 md:px-12 md:py-20"
-      >
+      <section id="rates" class="border-b border-line">
+        <div
+          class="mx-auto grid max-w-7xl gap-12 px-6 py-14 sm:px-10 md:grid-cols-2 md:items-center md:gap-16 md:px-12 md:py-20"
+        >
         <div>
           <p class="flex items-center gap-2.5">
             <span class="h-1.5 w-1.5 rounded-[2px] bg-volta"></span>
@@ -158,9 +158,10 @@ onUnmounted(() => {
         </div>
 
         <RateSelector />
+        </div>
       </section>
 
-      <div class="relative my-16 overflow-hidden rounded-sheet bg-ink text-white">
+      <div class="relative overflow-hidden bg-ink text-white">
         <svg
           class="pointer-events-none absolute inset-0 h-full w-full"
           viewBox="0 0 1440 900"
@@ -189,8 +190,8 @@ onUnmounted(() => {
           </g>
         </svg>
 
-        <section class="relative px-6 py-16 sm:px-10 md:px-12 md:py-20">
-          <div class="grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-end md:gap-16">
+        <section class="relative">
+          <div class="mx-auto grid max-w-7xl gap-6 px-6 py-16 sm:px-10 md:grid-cols-[1.4fr_1fr] md:items-end md:gap-16 md:px-12 md:py-20">
             <div>
               <p class="flex items-center gap-2.5">
                 <span class="h-1.5 w-1.5 rounded-[2px] bg-volta-tint"></span>
@@ -211,10 +212,8 @@ onUnmounted(() => {
           </div>
         </section>
 
-        <section
-          id="costs"
-          class="relative border-t border-white/10 px-6 py-16 sm:px-10 md:px-12 md:py-20"
-        >
+        <section id="costs" class="relative border-t border-white/10">
+          <div class="mx-auto max-w-7xl px-6 py-16 sm:px-10 md:px-12 md:py-20">
           <div class="max-w-2xl">
             <p class="flex items-center gap-2.5">
               <span class="h-1.5 w-1.5 rounded-[2px] bg-volta-tint"></span>
@@ -245,11 +244,12 @@ onUnmounted(() => {
               </div>
             </dl>
           </div>
+          </div>
         </section>
       </div>
 
-      <section class="relative overflow-hidden rounded-sheet bg-ink px-6 py-14 sm:px-10 md:px-12 md:py-20">
-        <div class="relative grid items-center gap-10 md:grid-cols-2 md:gap-16">
+      <section class="relative overflow-hidden border-t border-white/10 bg-ink">
+        <div class="relative mx-auto grid max-w-7xl items-center gap-10 px-6 py-14 sm:px-10 md:grid-cols-2 md:gap-16 md:px-12 md:py-20">
           <div class="order-2 md:order-1">
             <MapCorridor />
           </div>
@@ -281,7 +281,7 @@ onUnmounted(() => {
         </div>
       </section>
 
-      <section class="py-16 text-center md:py-20">
+      <section class="px-6 py-16 text-center sm:px-10 md:px-12 md:py-20">
         <p class="font-display text-3xl font-semibold text-ink">A name in Ghana, a rate you keep, on one screen.</p>
         <div class="mt-8">
           <RouterLink
@@ -321,7 +321,7 @@ onUnmounted(() => {
         </g>
       </svg>
 
-      <div class="relative mx-auto max-w-7xl px-4 pb-10 pt-20">
+      <div class="relative mx-auto max-w-7xl px-6 pb-10 pt-20 sm:px-10 md:px-12">
         <div class="grid gap-12 lg:grid-cols-[1.1fr_1.4fr] lg:gap-20">
           <div>
             <span class="flex items-center gap-2.5">
