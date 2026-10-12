@@ -9,6 +9,11 @@ const router = createRouter({
       name: 'home',
       component: HomeView,
     },
+    {
+      path: '/send',
+      name: 'send',
+      component: () => import('../views/SendView.vue'),
+    },
   ],
 })
 
