@@ -84,11 +84,30 @@ const signUp = async () => {
       </RouterLink>
 
       <div class="relative w-full max-w-md">
-        <h2 class="font-display text-4xl font-semibold leading-tight text-white">Create your account.</h2>
+        <p class="flex items-center gap-2.5">
+          <span class="h-1.5 w-1.5 rounded-[2px] bg-volta-tint" aria-hidden="true"></span>
+          <span class="text-xs font-medium tracking-[0.16em] text-white/50">GET STARTED</span>
+        </p>
+        <h2 class="mt-4 font-display text-4xl font-semibold leading-tight text-white">Create your account.</h2>
         <p class="mt-4 text-base leading-7 text-white/70">
           A username is all your sender needs. No wallet to top up, no balance to hold — just money
           moving to a Mobile Money account in Ghana.
         </p>
+
+        <ul class="mt-8 space-y-3.5 border-t border-white/12 pt-6">
+          <li class="flex items-center gap-3 text-sm font-medium text-white/80">
+            <span class="h-1.5 w-1.5 rounded-[2px] bg-volta-tint" aria-hidden="true"></span>
+            Verified Mobile Money recipients
+          </li>
+          <li class="flex items-center gap-3 text-sm font-medium text-white/80">
+            <span class="h-1.5 w-1.5 rounded-[2px] bg-volta-tint" aria-hidden="true"></span>
+            Rates locked for five minutes
+          </li>
+          <li class="flex items-center gap-3 text-sm font-medium text-white/80">
+            <span class="h-1.5 w-1.5 rounded-[2px] bg-volta-tint" aria-hidden="true"></span>
+            No wallets, no balances, ever
+          </li>
+        </ul>
 
         <div class="mt-9 rounded-panel border border-white/10 bg-white/[0.02] p-4">
           <MapCorridor :animated="false" />
@@ -107,7 +126,11 @@ const signUp = async () => {
           <span class="font-display text-xl font-semibold text-ink">Kryptamo</span>
         </RouterLink>
 
-        <h1 class="font-display text-3xl font-semibold text-ink">Create your account</h1>
+        <p class="flex items-center gap-2.5">
+          <span class="h-1.5 w-1.5 rounded-[2px] bg-volta" aria-hidden="true"></span>
+          <span class="text-xs font-medium tracking-[0.16em] text-slate">CREATE ACCOUNT</span>
+        </p>
+        <h1 class="mt-3 font-display text-3xl font-semibold text-ink">Create your account</h1>
         <p class="mt-2 text-sm text-slate">Takes a minute. Then you can send in seconds.</p>
 
         <form class="mt-8 space-y-5" novalidate @submit.prevent="signUp">

@@ -13,7 +13,7 @@ const signOut = () => {
 </script>
 
 <template>
-  <header class="sticky top-0 z-20 border-b border-line bg-mist/95">
+  <header class="sticky top-0 z-20 border-b border-line bg-mist/95 print:hidden">
     <div class="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4">
       <RouterLink to="/" class="flex items-center gap-2.5">
         <img src="/kryptamo.png" alt="Kryptamo logo" class="h-9 w-auto" />

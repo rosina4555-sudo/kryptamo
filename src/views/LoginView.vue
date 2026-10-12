@@ -100,7 +100,11 @@ const requestReset = () => {
           <span class="font-display text-xl font-semibold text-ink">Kryptamo</span>
         </RouterLink>
 
-        <h1 class="font-display text-3xl font-semibold text-ink">Sign in to Kryptamo</h1>
+        <p class="flex items-center gap-2.5">
+          <span class="h-1.5 w-1.5 rounded-[2px] bg-volta" aria-hidden="true"></span>
+          <span class="text-xs font-medium tracking-[0.16em] text-slate">WELCOME BACK</span>
+        </p>
+        <h1 class="mt-3 font-display text-3xl font-semibold text-ink">Sign in to Kryptamo</h1>
         <p class="mt-2 text-sm text-slate">Use your email, username or phone number to continue.</p>
 
         <form class="mt-8 space-y-5" novalidate @submit.prevent="signIn">
