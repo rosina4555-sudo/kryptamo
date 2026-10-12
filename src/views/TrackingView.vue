@@ -3,6 +3,7 @@ import { computed, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ArrowLeft, ArrowRight, RefreshCw } from 'lucide-vue-next'
 import AppHeader from '../components/AppHeader.vue'
+import PageMasthead from '../components/PageMasthead.vue'
 import StatusChip from '../components/StatusChip.vue'
 import VerticalTracker from '../components/VerticalTracker.vue'
 import { isTerminal, stateLabel, transfers } from '../api'
@@ -46,6 +47,18 @@ const terminal = computed(() => isTerminal(liveState.value))
 const delivered = computed(() => liveState.value === 'PAID_OUT')
 const failed = computed(() => liveState.value === 'FAILED')
 
+const eyebrow = computed(() => (transfer.value ? `TRANSFER ${transfer.value.transfer_id}` : 'TRANSFER'))
+const title = computed(() => {
+  if (error.value) return 'We couldn’t open that transfer'
+  if (!transfer.value) return 'Tracking your transfer'
+  return stateLabel(liveState.value)
+})
+const subtitle = computed(() => {
+  if (error.value) return error.value
+  if (!transfer.value) return 'Fetching the latest status from the network…'
+  return message.value || (terminal.value ? 'This transfer is complete.' : 'We’ll update this page as your money moves.')
+})
+
 load()
 
 onUnmounted(() => unsubscribe?.())
@@ -55,86 +68,88 @@ onUnmounted(() => unsubscribe?.())
   <div class="min-h-screen pb-16">
     <AppHeader />
 
-    <main class="mx-auto max-w-3xl px-4 py-8">
+    <PageMasthead :eyebrow="eyebrow" :title="title" :subtitle="subtitle">
+      <template #aside>
+        <aside v-if="transfer" class="space-y-5 border-l-2 border-volta-tint/40 pl-5 md:w-64">
+          <StatusChip :status="liveState" />
+          <div>
+            <p class="text-xs font-medium tracking-[0.16em] text-white/45">REFERENCE</p>
+            <p class="mt-1.5 font-mono text-xs text-white/80">{{ transfer.transfer_id }}</p>
+          </div>
+          <p v-if="!terminal" class="flex items-center gap-2 text-xs font-medium text-white/70">
+            <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-volta-tint" aria-hidden="true"></span>
+            Updating live
+          </p>
+        </aside>
+      </template>
+    </PageMasthead>
+
+    <main class="mx-auto max-w-5xl px-4">
       <RouterLink
         to="/transfers"
-        class="inline-flex items-center gap-2 text-sm font-medium text-slate transition-colors hover:text-ink"
+        class="mt-6 inline-flex items-center gap-2 text-sm font-medium text-slate transition-colors hover:text-ink"
       >
         <ArrowLeft :size="16" :stroke-width="1.75" />
         All transfers
       </RouterLink>
 
-      <div v-if="loading" class="mt-8 flex items-center gap-3 text-sm text-slate">
-        <span class="h-4 w-4 animate-spin rounded-full border border-slate border-t-transparent" aria-hidden="true"></span>
-        Loading transfer…
+      <div v-if="loading" class="mt-10 space-y-3" aria-busy="true">
+        <div class="h-5 w-40 animate-pulse rounded-control bg-line" aria-hidden="true"></div>
+        <div class="h-24 w-full animate-pulse rounded-panel bg-canvas" aria-hidden="true"></div>
+        <p class="text-sm text-slate">Loading transfer…</p>
       </div>
 
-      <p
-        v-else-if="error"
-        class="mt-8 rounded-control border border-alert/25 bg-alert/10 px-4 py-3 text-sm text-alert"
-      >
-        {{ error }}
-      </p>
-
       <template v-else-if="transfer">
-        <div class="mt-6 flex flex-wrap items-center gap-3">
-          <StatusChip :status="liveState" />
-          <span
-            v-if="!terminal"
-            class="flex items-center gap-1.5 text-xs font-medium text-slate"
-          >
-            <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-volta" aria-hidden="true"></span>
-            Live
-          </span>
-        </div>
-
-        <h1 class="mt-4 font-display text-3xl font-semibold text-ink">
-          {{ stateLabel(liveState) }}
-        </h1>
-        <p class="mt-2 text-sm text-slate">
-          {{ message || (terminal ? 'This transfer is complete.' : 'We’ll update this page as your money moves.') }}
-        </p>
-
-        <section class="mt-8 grid gap-6 rounded-panel border-2 border-ink bg-canvas p-5 sm:grid-cols-2">
-          <div>
-            <p class="text-xs font-medium tracking-[0.16em] text-slate">THEY RECEIVE</p>
-            <p class="mt-2 font-display text-3xl font-semibold text-ink tabular">
+        <section class="mt-8 grid overflow-hidden rounded-sheet border-2 border-ink sm:grid-cols-2">
+          <div class="bg-canvas p-6 md:p-8">
+            <div class="flex items-center gap-2.5">
+              <span class="h-1.5 w-1.5 rounded-[2px] bg-delivered" aria-hidden="true"></span>
+              <span class="text-xs font-medium tracking-[0.16em] text-slate">THEY RECEIVE</span>
+            </div>
+            <p class="mt-3 font-display text-4xl font-semibold leading-none text-ink tabular sm:text-5xl">
               {{ formatMoney(transfer.recipient_gets, transfer.target_currency) }}
             </p>
-            <p class="mt-1 text-sm text-slate">{{ transfer.counterparty_name }}</p>
+            <p class="mt-3 text-sm text-slate">{{ transfer.counterparty_name }}</p>
           </div>
-          <div class="sm:text-right">
-            <p class="text-xs font-medium tracking-[0.16em] text-slate">YOU SENT</p>
-            <p class="mt-2 font-display text-3xl font-semibold text-ink tabular">
+          <div class="border-t-2 border-ink bg-ink p-6 text-white sm:border-l-2 sm:border-t-0 md:p-8">
+            <div class="flex items-center gap-2.5">
+              <span class="h-1.5 w-1.5 rounded-[2px] bg-volta-tint" aria-hidden="true"></span>
+              <span class="text-xs font-medium tracking-[0.16em] text-white/55">YOU SENT</span>
+            </div>
+            <p class="mt-3 font-display text-4xl font-semibold leading-none text-white tabular sm:text-5xl">
               {{ formatMoney(transfer.send_amount, transfer.source_currency) }}
             </p>
-            <p class="mt-1 text-sm text-slate tabular">
+            <p class="mt-3 text-sm text-white/60 tabular">
               1 {{ transfer.source_currency }} = {{ transfer.fx_rate }} {{ transfer.target_currency }}
             </p>
           </div>
         </section>
 
-        <div class="mt-8 grid gap-8 md:grid-cols-[1fr_1fr]">
-          <section class="rounded-panel border border-line bg-canvas p-5">
-            <p class="text-xs font-medium tracking-[0.16em] text-slate">PROGRESS</p>
-            <div class="mt-5">
+        <div class="mt-8 grid gap-8 md:grid-cols-2">
+          <section class="rounded-panel border border-line bg-canvas p-6">
+            <div class="flex items-center gap-2.5">
+              <span class="h-1.5 w-1.5 rounded-[2px] bg-volta" aria-hidden="true"></span>
+              <span class="text-xs font-medium tracking-[0.16em] text-slate">PROGRESS</span>
+            </div>
+            <div class="mt-6">
               <VerticalTracker :status="liveState" />
             </div>
           </section>
 
-          <section class="space-y-6">
-            <div class="rounded-panel border border-line bg-canvas p-5">
-              <p class="text-xs font-medium tracking-[0.16em] text-slate">RECIPIENT</p>
-              <p class="mt-3 font-display text-xl font-semibold text-ink">
-                {{ transfer.counterparty_name }}
-              </p>
+          <div class="space-y-6">
+            <section class="rounded-panel border-2 border-ink bg-canvas p-6">
+              <div class="flex items-center gap-2.5">
+                <span class="h-1.5 w-1.5 rounded-[2px] bg-volta" aria-hidden="true"></span>
+                <span class="text-xs font-medium tracking-[0.16em] text-slate">RECIPIENT</span>
+              </div>
+              <p class="mt-4 font-display text-xl font-semibold text-ink">{{ transfer.counterparty_name }}</p>
               <p class="mt-1 text-sm text-slate">{{ transfer.counterparty_handle }}</p>
               <p class="mt-3 text-sm text-slate">
                 {{ transfer.network }} Mobile Money · {{ transfer.target_currency }}
               </p>
-            </div>
+            </section>
 
-            <dl class="rounded-panel border border-line bg-canvas p-5 text-sm">
+            <dl class="rounded-panel border border-line bg-canvas p-6 text-sm">
               <div class="flex items-center justify-between py-1.5">
                 <dt class="text-slate">Rate</dt>
                 <dd class="font-medium text-ink tabular">
@@ -149,7 +164,7 @@ onUnmounted(() => unsubscribe?.())
                 <dt class="text-slate">Network fee</dt>
                 <dd class="font-medium text-ink tabular">{{ formatMoney(transfer.network_fee, transfer.source_currency) }}</dd>
               </div>
-              <div class="mt-2 flex items-center justify-between border-t border-line pt-3">
+              <div class="mt-2 flex items-center justify-between border-t-2 border-ink pt-3">
                 <dt class="font-medium text-ink">Total paid</dt>
                 <dd class="font-semibold text-ink tabular">{{ formatMoney(transfer.total_payable, transfer.source_currency) }}</dd>
               </div>
@@ -162,7 +177,7 @@ onUnmounted(() => unsubscribe?.())
                 <dd class="text-ink tabular">{{ formatDateTime(transfer.created_at) }}</dd>
               </div>
             </dl>
-          </section>
+          </div>
         </div>
 
         <div class="mt-8 flex flex-wrap gap-3">
@@ -190,6 +205,17 @@ onUnmounted(() => unsubscribe?.())
           </RouterLink>
         </div>
       </template>
+
+      <div v-else class="mt-8 rounded-panel border border-alert/25 bg-alert/10 p-6">
+        <p class="text-sm text-alert">{{ error }}</p>
+        <RouterLink
+          to="/transfers"
+          class="mt-4 inline-flex h-11 items-center gap-2 rounded-control border border-line bg-canvas px-4 text-sm font-medium text-ink transition-colors hover:bg-mist"
+        >
+          <ArrowLeft :size="16" :stroke-width="1.75" />
+          Back to transfers
+        </RouterLink>
+      </div>
     </main>
   </div>
 </template>
