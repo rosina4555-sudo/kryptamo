@@ -1,28 +1,36 @@
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { Banknote, Building2, Radio } from 'lucide-vue-next'
 import MapCorridor from '../components/MapCorridor.vue'
 import TransferTracker from '../components/TransferTracker.vue'
 import RateChart from '../components/RateChart.vue'
 import RateSelector from '../components/RateSelector.vue'
-import { formatMoney } from '../utils/format'
+import { formatMoney, formatRate } from '../utils/format'
+import { corridorRate, sendCountries } from '../data/countries'
 
-const fees = 2.0
-const platformFee = 1.5
-const networkFee = 0.5
-const rate = 15.6
+const fees = 0
+const platformFee = 0
+const networkFee = 0
+
+const liveRates = sendCountries().map((c) => ({
+  code: c.currency,
+  name: c.name,
+  flag: c.code,
+  rate: corridorRate(c.currency, 'GHS'),
+}))
 
 const footerWave =
   'M-120 380 C0 380 0 440 120 440 C240 440 240 380 360 380 C480 380 480 320 600 320 C720 320 720 380 840 380 C960 380 960 440 1080 440 C1200 440 1200 380 1320 380 C1440 380 1440 320 1560 320'
 
 const rings = Array.from({ length: 12 }, (_, i) => 90 + i * 74)
 
-const ticker = ref(rate)
+const liveIndex = ref(0)
+const liveRate = computed(() => liveRates[liveIndex.value])
 let tickerTimer
 
 const trackerSteps = [
-  { label: 'Payment received', time: '2:35 pm', icon: 'card' },
-  { label: 'Preparing your transfer', time: '2:36 pm', icon: 'convert' },
+  { label: 'Payment approved', time: '2:35 pm', icon: 'wallet' },
+  { label: 'Buying stablecoins', time: '2:36 pm', icon: 'convert' },
   { label: 'Sending to MTN Mobile Money', time: 'now', icon: 'route' },
   { label: 'Delivered', time: '', icon: 'delivered' },
 ]
@@ -31,8 +39,7 @@ let trackerTimer
 
 onMounted(() => {
   tickerTimer = setInterval(() => {
-    const drift = (Math.random() - 0.5) * 0.002
-    ticker.value = Math.min(15.7, Math.max(15.5, ticker.value + drift))
+    liveIndex.value = (liveIndex.value + 1) % liveRates.length
   }, 4000)
   trackerTimer = setInterval(() => {
     trackerIndex.value = trackerIndex.value < trackerSteps.length - 1 ? trackerIndex.value + 1 : 0
@@ -96,15 +103,16 @@ onUnmounted(() => {
               <span class="h-1.5 w-1.5 rounded-[2px] bg-white"></span>
               <span class="text-xs font-medium tracking-[0.16em] text-white/50">LIVE</span>
               <span class="h-3.5 w-px bg-white/20"></span>
-              1 USD = <span class="font-semibold text-white">{{ ticker.toFixed(4) }}</span> GHS
+              1 {{ liveRate.code }} =
+              <span class="font-semibold text-white">{{ formatRate(liveRate.rate) }}</span> GHS
             </p>
 
             <h1 class="mt-6 font-display text-[40px] font-semibold leading-[1.05] text-white sm:text-[56px]">
-              Send money to a person in Ghana.
+              Send money across Africa.
             </h1>
             <p class="mt-6 max-w-md text-lg leading-7 text-white/70">
               Type a @username. We verify the name behind it against Mobile Money, lock the rate for five
-              minutes, and pay the GHS straight to their account.
+              minutes, and pay straight into their wallet — with no transfer fees.
             </p>
 
             <div class="mt-8 flex flex-wrap items-center gap-4">
@@ -135,24 +143,24 @@ onUnmounted(() => {
             <span class="text-xs font-medium tracking-[0.16em] text-slate">CONVERT</span>
           </p>
           <h2 class="mt-4 font-display text-3xl font-semibold text-ink sm:text-4xl">
-            See the cedis before you send.
+            See what they receive before you send.
           </h2>
           <p class="mt-4 max-w-md text-base leading-7 text-slate">
-            Choose where you are sending from and how much. We show the rate, the fee and exactly what
-            lands in Ghana — before you enter a card.
+            Choose where you are sending from and how much. We show the rate and exactly what lands in their
+            Mobile Money wallet — before you approve.
           </p>
           <ul class="mt-8 space-y-3.5 border-t border-line pt-6">
+            <li class="flex items-center gap-3 text-sm font-medium text-ink">
+              <span class="h-1.5 w-1.5 rounded-[2px] bg-volta"></span>
+              No transfer fees, ever
+            </li>
             <li class="flex items-center gap-3 text-sm font-medium text-ink">
               <span class="h-1.5 w-1.5 rounded-[2px] bg-volta"></span>
               Rate locked for five minutes
             </li>
             <li class="flex items-center gap-3 text-sm font-medium text-ink">
               <span class="h-1.5 w-1.5 rounded-[2px] bg-volta"></span>
-              Two fees, both shown upfront
-            </li>
-            <li class="flex items-center gap-3 text-sm font-medium text-ink">
-              <span class="h-1.5 w-1.5 rounded-[2px] bg-volta"></span>
-              No wallet to top up, ever
+              Mobile Money on both sides
             </li>
           </ul>
         </div>
@@ -220,27 +228,31 @@ onUnmounted(() => {
               <span class="text-xs font-medium tracking-[0.16em] text-white/60">COSTS</span>
             </p>
             <h2 class="mt-4 font-display text-3xl font-semibold text-white sm:text-4xl">
-              What it costs.
+              Sending is free.
             </h2>
             <p class="mt-4 text-base font-medium leading-7 text-white/75">
-              Both fees sit in the summary from the start. Nothing appears at the last step.
+              There are no transfer fees. You pay only the amount you see, at the rate we locked — no
+              surprises at the last step.
             </p>
 
             <dl class="mt-8 border-t-2 border-white/20 text-sm">
               <div class="flex items-center gap-3 border-b border-white/10 py-4">
-                <Building2 :size="16" :stroke-width="1.5" class="text-white/40" />
+                <Building2 :size="18" :stroke-width="1.5" class="text-white/50" />
                 <dt class="flex-1 text-white/75">Platform fee</dt>
-                <dd class="font-medium text-white tabular">{{ formatMoney(platformFee, 'USD') }}</dd>
+                <dd class="text-base font-semibold text-white tabular">{{ formatMoney(platformFee, 'GHS') }}</dd>
               </div>
               <div class="flex items-center gap-3 border-b border-white/10 py-4">
-                <Radio :size="16" :stroke-width="1.5" class="text-white/40" />
+                <Radio :size="18" :stroke-width="1.5" class="text-white/50" />
                 <dt class="flex-1 text-white/75">Network fee</dt>
-                <dd class="font-medium text-white tabular">{{ formatMoney(networkFee, 'USD') }}</dd>
+                <dd class="text-base font-semibold text-white tabular">{{ formatMoney(networkFee, 'GHS') }}</dd>
               </div>
               <div class="flex items-center gap-3 py-4">
-                <Banknote :size="16" :stroke-width="1.5" class="text-volta-tint" />
-                <dt class="flex-1 font-medium text-white">Total to pay</dt>
-                <dd class="text-lg font-semibold text-white tabular">{{ formatMoney(fees, 'USD') }}</dd>
+                <Banknote :size="18" :stroke-width="1.5" class="text-volta-tint" />
+                <dt class="flex flex-1 items-center gap-2 font-semibold text-white">
+                  Total fees
+                  <span class="rounded-control bg-delivered/15 px-2 py-0.5 text-xs font-semibold text-volta-tint">Free</span>
+                </dt>
+                <dd class="font-display text-2xl font-semibold text-white tabular">{{ formatMoney(fees, 'GHS') }}</dd>
               </div>
             </dl>
           </div>
@@ -254,27 +266,26 @@ onUnmounted(() => {
             <MapCorridor />
           </div>
           <div class="order-1 md:order-2">
-            <p class="text-sm text-white/60 tabular">US · Canada · UK → Ghana</p>
+            <p class="text-sm text-white/60 tabular">Nigeria · Kenya · Ivory Coast · Senegal · Cameroon · Uganda</p>
             <h2 class="mt-4 font-display text-3xl font-semibold leading-tight text-white sm:text-4xl">
-              Money from three countries, one doorstep.
+              Any African country, one doorstep.
             </h2>
             <p class="mt-5 max-w-md text-base leading-7 text-white/70">
-              Whether you send from the United States, Canada or the United Kingdom, the route is the same:
-              your local currency leaves your card, settles on-chain in stablecoins you never see, and lands
-              as cedis in a Mobile Money wallet in Ghana — at the rate you were quoted.
+              Send from your Mobile Money wallet in any of these countries. We settle across borders in
+              seconds and land local Mobile Money in the recipient's wallet — at the rate you were quoted.
             </p>
             <div class="mt-8 grid grid-cols-3 gap-6 border-t border-white/12 pt-6">
               <div>
-                <p class="font-display text-xl font-semibold text-white tabular">US · CA · UK</p>
-                <p class="mt-1 text-sm text-white/60">Send corridors</p>
+                <p class="font-display text-xl font-semibold text-white tabular">6 corridors</p>
+                <p class="mt-1 text-sm text-white/60">Across Africa</p>
               </div>
               <div>
                 <p class="font-display text-2xl font-semibold text-white tabular">5 min</p>
                 <p class="mt-1 text-sm text-white/60">Rate locked</p>
               </div>
               <div>
-                <p class="font-display text-2xl font-semibold text-white">2 fees</p>
-                <p class="mt-1 text-sm text-white/60">Fully upfront</p>
+                <p class="font-display text-2xl font-semibold text-white">$0 fees</p>
+                <p class="mt-1 text-sm text-white/60">Always free</p>
               </div>
             </div>
           </div>
@@ -282,7 +293,7 @@ onUnmounted(() => {
       </section>
 
       <section class="px-6 py-16 text-center sm:px-10 md:px-12 md:py-20">
-        <p class="font-display text-3xl font-semibold text-ink">A name in Ghana, a rate you keep, on one screen.</p>
+        <p class="font-display text-3xl font-semibold text-ink">A name you trust, a rate you keep, on one screen.</p>
         <div class="mt-8">
           <RouterLink
             to="/send"
@@ -329,16 +340,17 @@ onUnmounted(() => {
               <span class="font-display text-xl font-semibold text-white">Kryptamo</span>
             </span>
             <p class="mt-5 max-w-sm text-sm leading-6 text-white/60">
-              Cross-border remittances to Ghana. No wallets, no holding — straight to Mobile Money.
+              Fee-free cross-border remittances across Africa. No wallets, no holding — straight to Mobile
+              Money.
             </p>
 
             <dl class="mt-10 max-w-xs border-t border-white/12 pt-6">
               <dt class="text-xs font-medium tracking-[0.16em] text-white/40">REFERENCE RATE</dt>
               <dd class="mt-3 flex items-baseline gap-2">
                 <span class="font-display text-3xl font-semibold text-white tabular">
-                  {{ ticker.toFixed(4) }}
+                  {{ formatRate(liveRate.rate) }}
                 </span>
-                <span class="text-sm text-white/50">GHS per USD</span>
+                <span class="text-sm text-white/60">{{ liveRate.code }} → GHS</span>
               </dd>
             </dl>
           </div>
@@ -391,15 +403,15 @@ onUnmounted(() => {
               <ul class="mt-5 space-y-3.5 text-sm text-white/70">
                 <li class="flex items-center gap-2.5">
                   <span class="h-1.5 w-1.5 rounded-[2px] bg-volta-tint"></span>
-                  United States · Canada · UK
+                  Nigeria · Kenya · Ivory Coast
                 </li>
                 <li class="flex items-center gap-2.5">
                   <span class="h-1.5 w-1.5 rounded-[2px] bg-volta-tint"></span>
-                  Ghana · GHS
+                  Senegal · Cameroon · Uganda
                 </li>
                 <li class="flex items-center gap-2.5">
                   <span class="h-1.5 w-1.5 rounded-[2px] bg-delivered"></span>
-                  MTN Mobile Money
+                  Paid out to Mobile Money
                 </li>
               </ul>
             </div>
@@ -409,8 +421,8 @@ onUnmounted(() => {
         <div
           class="mt-16 flex flex-wrap items-center justify-between gap-4 border-t border-white/12 pt-6"
         >
-          <p class="text-xs text-white/50">© 2026 Kryptamo. Remittances to Ghana.</p>
-          <p class="text-xs tracking-[0.16em] text-white/40 tabular">USD → GHS</p>
+          <p class="text-xs text-white/50">© 2026 Kryptamo. Across Africa.</p>
+          <p class="text-xs tracking-[0.16em] text-white/40 tabular">{{ liveRate.code }} → GHS</p>
         </div>
       </div>
     </footer>

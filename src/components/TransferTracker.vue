@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { BadgeCheck, Check, CreditCard, RefreshCw, Send } from 'lucide-vue-next'
+import { BadgeCheck, Check, CreditCard, RefreshCw, Send, Smartphone } from 'lucide-vue-next'
 
 const props = defineProps({
   steps: {
@@ -23,6 +23,7 @@ const HEX = '28,2 52,16 52,40 28,54 4,40 4,16'
 
 const ICONS = {
   card: CreditCard,
+  wallet: Smartphone,
   convert: RefreshCw,
   route: Send,
   delivered: BadgeCheck,

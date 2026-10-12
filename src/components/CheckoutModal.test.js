@@ -6,8 +6,8 @@ function mountModal(overrides = {}) {
   return mount(CheckoutModal, {
     props: {
       open: true,
-      amount: 52,
-      currency: 'USD',
+      amount: 50000,
+      currency: 'NGN',
       recipientName: 'KWAME A. MENSAH',
       gatewayUrl: 'https://checkout.honeycoin.app/pay/checkout_1',
       ...overrides,
@@ -23,7 +23,7 @@ describe('CheckoutModal', () => {
   it('shows the gateway host, amount and recipient', () => {
     const wrapper = mountModal()
     expect(wrapper.text()).toContain('checkout.honeycoin.app')
-    expect(wrapper.text()).toContain('$52.00')
+    expect(wrapper.text()).toContain('₦50,000.00')
     expect(wrapper.text()).toContain('KWAME A. MENSAH')
   })
 

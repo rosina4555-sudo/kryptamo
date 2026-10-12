@@ -1,14 +1,15 @@
 <script setup>
 import { computed, nextTick, ref, watch } from 'vue'
-import { CreditCard, Lock, ShieldCheck, X } from 'lucide-vue-next'
+import { Lock, ShieldCheck, Smartphone, X } from 'lucide-vue-next'
 import { formatMoney } from '../utils/format'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
   gatewayUrl: { type: String, default: '' },
   amount: { type: Number, default: 0 },
-  currency: { type: String, default: 'USD' },
+  currency: { type: String, default: 'NGN' },
   recipientName: { type: String, default: '' },
+  network: { type: String, default: 'Mobile Money' },
 })
 
 const emit = defineEmits(['close', 'paid'])
@@ -81,9 +82,9 @@ const pay = async () => {
             </p>
 
             <div class="mt-6 flex items-center gap-3 rounded-control border border-line bg-mist/60 px-4 py-3">
-              <CreditCard :size="20" :stroke-width="1.5" class="text-slate" />
-              <span class="text-sm font-medium text-ink tabular">Visa •••• 4242</span>
-              <span class="ml-auto text-xs text-slate">Exp 04/28</span>
+              <Smartphone :size="20" :stroke-width="1.5" class="text-slate" />
+              <span class="text-sm font-medium text-ink">{{ network }}</span>
+              <span class="ml-auto text-sm text-slate tabular">•••• 567</span>
             </div>
 
             <button

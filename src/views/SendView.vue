@@ -1,33 +1,31 @@
 <script setup>
-import { computed, onUnmounted, ref, watch } from 'vue'
+import { computed, ref, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { CreditCard, RefreshCw, Route, Search, Smartphone } from 'lucide-vue-next'
+import { RefreshCw, Route, Search, Send, Smartphone } from 'lucide-vue-next'
 import AppHeader from '../components/AppHeader.vue'
 import PageMasthead from '../components/PageMasthead.vue'
 import RecipientCard from '../components/RecipientCard.vue'
 import QuoteSummary from '../components/QuoteSummary.vue'
 import CheckoutModal from '../components/CheckoutModal.vue'
-import { formatMoney } from '../utils/format'
+import FlagIcon from '../components/FlagIcon.vue'
+import { formatMoney, currencySymbol } from '../utils/format'
+import { countryByCode, sendCountries } from '../data/countries'
 import { quotes, transfers, users } from '../api'
 
 const router = useRouter()
 
-const corridors = [
-  { code: 'USD', label: 'US Dollar', symbol: '$' },
-  { code: 'CAD', label: 'Canadian dollar', symbol: 'C$' },
-  { code: 'GBP', label: 'British pound', symbol: '£' },
-]
+const senderOptions = sendCountries()
 
 const nextSteps = [
-  { icon: CreditCard, title: 'You pay your card', body: 'The total, fees included, is shown before you confirm — nothing appears later.' },
-  { icon: RefreshCw, title: 'We buy stablecoins', body: 'Your fiat converts on a settlement rail you never see.' },
-  { icon: Route, title: 'Routed on-chain', body: 'Settlement lands in seconds, at the rate we locked for you.' },
-  { icon: Smartphone, title: 'Lands as cedis', body: 'GHS arrives in their Mobile Money wallet. You watch every step.' },
+  { icon: Smartphone, title: 'You pay from your wallet', body: 'Approve the transfer from your own Mobile Money wallet — no card, no bank.' },
+  { icon: RefreshCw, title: 'We buy stablecoins', body: 'Your local currency converts on a settlement rail you never see.' },
+  { icon: Route, title: 'Routed across borders', body: 'Settlement lands in seconds, at the rate we locked for you.' },
+  { icon: Send, title: 'Lands as Mobile Money', body: 'Their local currency arrives in their Mobile Money wallet, tracked step by step.' },
 ]
 
 const handle = ref('')
-const amount = ref('50')
-const currency = ref('USD')
+const amount = ref('50000')
+const senderCode = ref('NG')
 
 const lookupState = ref('idle')
 const lookupError = ref('')
@@ -43,7 +41,10 @@ let lookupTimer
 let quoteTimer
 let expiryTimer
 
-const currencySymbol = computed(() => corridors.find((c) => c.code === currency.value)?.symbol ?? '$')
+const sender = computed(() => countryByCode(senderCode.value))
+const currency = computed(() => sender.value?.currency ?? 'NGN')
+const currencySymbolText = computed(() => currencySymbol(currency.value))
+const targetCurrency = computed(() => recipient.value?.currency ?? 'GHS')
 
 const handleInput = () => {
   handle.value = handle.value.toLowerCase().replace(/[^a-z0-9]/g, '')
@@ -82,78 +83,68 @@ const lookup = async () => {
 
 const scheduleQuote = () => {
   clearTimeout(quoteTimer)
-  if (!recipient.value || !(Number(amount.value) > 0)) {
+  if (!recipient.value) {
     quote.value = null
     return
   }
-  quoteTimer = setTimeout(fetchQuote, 500)
+  quoteTimer = setTimeout(createQuote, 300)
 }
 
-const fetchQuote = async () => {
-  if (!recipient.value || !(Number(amount.value) > 0)) return
-  notice.value = ''
+const createQuote = async () => {
+  if (!recipient.value) return
+  const value = Number(amount.value)
+  if (!Number.isFinite(value) || value <= 0) {
+    quote.value = null
+    return
+  }
   try {
     quote.value = await quotes.create({
       recipient_username: recipient.value.username,
-      amount: Number(amount.value),
+      amount: value,
       source_currency: currency.value,
-      target_currency: 'GHS',
+      source_country: senderCode.value,
     })
+    notice.value = ''
     scheduleExpiry()
   } catch (error) {
     quote.value = null
-    if (error?.error_code !== 'QUOTE_EXPIRED') notice.value = error?.message ?? ''
+    notice.value = error?.error_code === 'LIMIT_EXCEEDED'
+      ? 'That amount is above your daily limit. Try a smaller transfer.'
+      : error?.message ?? ''
   }
 }
 
 const scheduleExpiry = () => {
   clearTimeout(expiryTimer)
   if (!quote.value) return
-  const remaining = new Date(quote.value.expires_at).getTime() - Date.now()
-  if (remaining > 0) expiryTimer = setTimeout(fetchQuote, remaining + 250)
+  const ms = new Date(quote.value.expires_at).getTime() - Date.now()
+  expiryTimer = setTimeout(() => {
+    quote.value = null
+    notice.value = 'Your rate expired. We’ll refresh it — enter the amount again.'
+  }, Math.max(0, ms))
 }
 
-watch(handle, () => {
-  clearTimeout(lookupTimer)
-  const username = handle.value.trim()
-  if (username.length < 3) {
-    resetRecipient()
-    return
-  }
-  lookupTimer = setTimeout(lookup, 450)
-})
-
-watch(amount, scheduleQuote)
-watch(currency, scheduleQuote)
-
-const sendAmount = computed(() => Number(quote.value?.send_amount ?? amount.value) || 0)
-const fees = computed(() =>
-  quote.value ? Number(quote.value.platform_fee) + Number(quote.value.network_fee) : 0,
-)
-const rate = computed(() => Number(quote.value?.fx_rate ?? 0))
-const recipientGets = computed(() => (sendAmount.value * rate.value).toFixed(2))
-const expiresAt = computed(() =>
-  quote.value ? new Date(quote.value.expires_at).getTime() : Date.now(),
-)
+const reconfirm = () => {
+  notice.value = ''
+  createQuote()
+}
 
 const onPay = async () => {
-  if (!quote.value || !recipient.value) return
-  notice.value = ''
+  if (!quote.value) return
   try {
-    const idempotency_key = globalThis.crypto?.randomUUID?.() ?? `idem_${Date.now()}`
     const result = await transfers.create({
       quote_id: quote.value.quote_id,
-      payment_method: { type: 'card', last4: '4242' },
-      idempotency_key,
+      payment_method: { type: 'mobile_money', network: sender.value?.networks?.[0] ?? 'Mobile Money' },
+      idempotency_key: quote.value.quote_id,
     })
     createdTransfer.value = result
     checkoutOpen.value = true
   } catch (error) {
     if (error?.error_code === 'QUOTE_EXPIRED') {
+      quote.value = null
       notice.value = error.message
-      fetchQuote()
     } else {
-      notice.value = error?.message ?? 'We couldn’t start this transfer.'
+      notice.value = error?.message ?? 'We couldn’t start that transfer.'
     }
   }
 }
@@ -163,11 +154,28 @@ const onCheckoutPaid = () => {
   if (createdTransfer.value) router.push(`/transfers/${createdTransfer.value.transfer_id}`)
 }
 
+const selectSender = (code) => {
+  senderCode.value = code
+  if (recipient.value) scheduleQuote()
+}
+
 onUnmounted(() => {
   clearTimeout(lookupTimer)
   clearTimeout(quoteTimer)
   clearTimeout(expiryTimer)
 })
+
+const watchHandle = () => {
+  clearTimeout(lookupTimer)
+  const username = handle.value.trim()
+  if (username.length < 3) {
+    resetRecipient()
+    return
+  }
+  lookupTimer = setTimeout(lookup, 300)
+}
+
+watch(handle, watchHandle)
 </script>
 
 <template>
@@ -176,101 +184,92 @@ onUnmounted(() => {
 
     <PageMasthead
       eyebrow="SEND MONEY"
-      title="Who are you sending to?"
-      subtitle="Type a @username. We verify the name behind it against Mobile Money, lock your rate for five minutes, and pay the cedis straight to their wallet."
+      title="Send money across Africa."
+      subtitle="Type the recipient’s @username. We verify the name, lock the rate for five minutes, and move your Mobile Money straight into theirs — with no transfer fees."
     >
       <template #aside>
         <aside class="border-l-2 border-volta-tint/40 pl-5 md:w-64">
           <p class="text-xs font-medium tracking-[0.16em] text-white/45">DELIVERY</p>
           <p class="mt-3 font-display text-2xl font-semibold leading-tight text-white">
-            Ghana · Mobile Money
+            Africa · Mobile Money
           </p>
           <p class="mt-3 flex items-center gap-2 text-sm text-white/60 tabular">
             <span class="h-1.5 w-1.5 rounded-[2px] bg-volta-tint" aria-hidden="true"></span>
-            US · Canada · UK → GHS
+            Mobile Money → Mobile Money
           </p>
         </aside>
       </template>
     </PageMasthead>
 
-    <main class="mx-auto max-w-5xl px-4">
-      <div class="grid gap-10 py-12 md:grid-cols-[1fr_380px] md:items-start md:gap-12">
-        <section aria-label="Send form" class="space-y-12">
-          <section aria-labelledby="recipient-label">
-            <div class="flex items-center gap-2.5">
-              <span class="font-display text-sm font-semibold text-volta tabular">01</span>
-              <span class="text-xs font-medium tracking-[0.16em] text-slate">RECIPIENT</span>
-            </div>
-            <h2 id="recipient-label" class="mt-3 font-display text-2xl font-semibold text-ink">
-              Who are you sending to?
-            </h2>
-
-            <div
-              class="mt-5 flex items-center border-b-2 bg-transparent pb-2 transition-colors focus-within:border-volta"
-              :class="lookupState === 'notfound' || lookupState === 'error' ? 'border-alert' : lookupState === 'found' ? 'border-delivered' : 'border-line'"
-            >
-              <Search :size="20" :stroke-width="1.5" class="mr-3 shrink-0 text-slate" aria-hidden="true" />
-              <span class="mr-0.5 font-display text-xl font-semibold text-slate">@</span>
+    <main class="mx-auto max-w-5xl px-6 sm:px-8 md:px-4">
+      <div class="grid gap-12 py-14 md:grid-cols-[1fr_380px] md:items-start md:gap-12">
+        <div class="space-y-12">
+          <section>
+            <p class="text-xs font-semibold tracking-[0.16em] text-volta">RECIPIENT</p>
+            <h2 class="mt-3 font-display text-2xl font-semibold text-ink">Who are you sending to?</h2>
+            <label for="handle" class="mt-5 block text-sm font-medium text-ink">Recipient username</label>
+            <div class="mt-2 flex items-center gap-2 border-b-2 border-line pb-2 transition-colors focus-within:border-volta">
+              <Search :size="18" :stroke-width="1.5" class="text-slate" aria-hidden="true" />
+              <span class="font-display text-lg font-semibold text-slate">@</span>
               <input
                 id="handle"
                 v-model="handle"
                 type="text"
                 autocapitalize="none"
                 spellcheck="false"
-                class="h-11 w-full bg-transparent font-display text-xl text-ink outline-none placeholder:font-ui placeholder:text-base placeholder:font-normal placeholder:text-slate"
+                autocomplete="off"
+                class="h-10 w-full bg-transparent font-display text-lg text-ink outline-none placeholder:text-slate/60"
                 placeholder="username"
-                :aria-invalid="lookupState === 'notfound' || lookupState === 'error'"
+                :aria-invalid="lookupState === 'error' || lookupState === 'notfound'"
+                aria-describedby="handle-status"
                 @input="handleInput"
               />
             </div>
 
-            <p v-if="lookupState === 'loading'" class="mt-3 flex items-center gap-2 text-sm text-slate">
-              <span class="h-3 w-3 animate-spin rounded-full border border-slate border-t-transparent" aria-hidden="true"></span>
-              Checking @{{ handle }} with Mobile Money…
-            </p>
             <p
-              v-else-if="lookupState === 'notfound' || lookupState === 'error'"
-              class="mt-3 text-sm text-alert"
+              id="handle-status"
+              class="mt-3 text-sm"
+              :class="lookupState === 'notfound' || lookupState === 'error' ? 'text-alert' : 'text-slate'"
+              aria-live="polite"
             >
-              {{ lookupError }}
+              <template v-if="lookupState === 'loading'">Checking @{{ handle }} with Mobile Money…</template>
+              <template v-else-if="lookupState === 'notfound' || lookupState === 'error'">{{ lookupError }}</template>
+              <template v-else-if="lookupState === 'found'">Verified Mobile Money account.</template>
             </p>
 
             <RecipientCard v-if="recipient" class="mt-5" :recipient="recipient" />
           </section>
 
-          <section aria-labelledby="amount-label">
-            <div class="flex items-center gap-2.5">
-              <span class="font-display text-sm font-semibold text-volta tabular">02</span>
-              <span class="text-xs font-medium tracking-[0.16em] text-slate">AMOUNT</span>
-            </div>
-            <h2 id="amount-label" class="mt-3 font-display text-2xl font-semibold text-ink">
-              How much are you sending?
-            </h2>
+          <section>
+            <p class="text-xs font-semibold tracking-[0.16em] text-volta">AMOUNT</p>
+            <h2 class="mt-3 font-display text-2xl font-semibold text-ink">How much are you sending?</h2>
 
+            <fieldset class="mt-5">
+              <legend class="text-sm font-medium text-ink">Send from</legend>
+              <div class="mt-2 flex flex-wrap gap-2">
+                <button
+                  v-for="option in senderOptions"
+                  :key="option.code"
+                  type="button"
+                  class="inline-flex items-center gap-2 rounded-control border-2 px-3 py-2 text-sm font-medium transition-colors"
+                  :class="senderCode === option.code ? 'border-volta bg-volta-tint/50 text-ink' : 'border-line bg-canvas text-slate hover:border-slate'"
+                  :aria-pressed="senderCode === option.code"
+                  @click="selectSender(option.code)"
+                >
+                  <FlagIcon :code="option.code" class="h-4 w-6 rounded-[2px] ring-1 ring-black/5" />
+                  {{ option.name }}
+                </button>
+              </div>
+            </fieldset>
 
-            <div class="mt-5 flex flex-wrap gap-2" role="group" aria-label="Send currency">
-              <button
-                v-for="c in corridors"
-                :key="c.code"
-                type="button"
-                class="flex-1 rounded-control border-2 px-3 py-2.5 text-left transition-colors"
-                :class="currency === c.code ? 'border-volta bg-volta-tint/50' : 'border-line bg-canvas hover:border-slate'"
-                :aria-pressed="currency === c.code"
-                @click="currency = c.code"
-              >
-                <span class="block font-display text-base font-semibold text-ink">{{ c.code }}</span>
-                <span class="mt-0.5 block text-xs text-slate">{{ c.label }}</span>
-              </button>
-            </div>
-
-            <div class="mt-5 flex items-end gap-3 border-b-2 border-line pb-2 transition-colors focus-within:border-volta">
-              <span class="font-display text-3xl font-semibold leading-none text-slate">{{ currencySymbol }}</span>
+            <label for="amount" class="mt-6 block text-sm font-medium text-ink">Amount in {{ currency }}</label>
+            <div class="mt-2 flex items-end gap-3 border-b-2 border-line pb-2 transition-colors focus-within:border-volta">
+              <span class="font-display text-3xl font-semibold leading-none text-slate">{{ currencySymbolText }}</span>
               <input
                 id="amount"
                 v-model="amount"
                 inputmode="decimal"
                 class="h-12 w-full bg-transparent font-display text-4xl font-semibold leading-none text-ink outline-none tabular"
-                aria-label="Amount to send"
               />
             </div>
 
@@ -278,61 +277,62 @@ onUnmounted(() => {
               <span class="h-1.5 w-1.5 rounded-[2px] bg-delivered" aria-hidden="true"></span>
               {{ recipient.account_name }} receives
               <span class="font-display text-xl font-semibold text-ink tabular">
-                {{ formatMoney(recipientGets, 'GHS') }}
+                {{ formatMoney(quote.recipient_gets, targetCurrency) }}
               </span>
             </p>
           </section>
 
-          <section aria-labelledby="pay-label">
-            <div class="flex items-center gap-2.5">
-              <span class="font-display text-sm font-semibold text-volta tabular">03</span>
-              <span class="text-xs font-medium tracking-[0.16em] text-slate">PAY WITH</span>
-            </div>
-            <h2 id="pay-label" class="mt-3 font-display text-2xl font-semibold text-ink">
-              Pay with your card.
-            </h2>
+          <section>
+            <p class="text-xs font-semibold tracking-[0.16em] text-volta">PAY WITH</p>
+            <h2 class="mt-3 font-display text-2xl font-semibold text-ink">Your Mobile Money wallet.</h2>
 
             <div class="mt-5 flex items-center gap-4 rounded-panel border border-line bg-canvas px-4 py-4">
-              <span class="flex h-9 w-12 items-center justify-center rounded-control border border-line bg-mist text-xs font-semibold tracking-[0.08em] text-ink">
-                VISA
-              </span>
+              <FlagIcon :code="senderCode" class="h-7 w-10 rounded-[3px] ring-1 ring-line" />
               <div class="min-w-0 flex-1">
-                <p class="text-sm font-medium text-ink tabular">•••• •••• •••• 4242</p>
-                <p class="mt-0.5 text-xs text-slate">Expires 04/28</p>
+                <p class="text-sm font-medium text-ink">{{ sender.networks[0] }} · {{ sender.name }}</p>
+                <p class="mt-0.5 text-xs text-slate tabular">+{{ sender.dial }} •• •••• ·····</p>
               </div>
-              <span class="hidden text-xs font-medium tracking-[0.16em] text-slate sm:block">SAVED CARD</span>
+              <span class="hidden text-xs font-medium tracking-[0.16em] text-slate sm:block">WALLET</span>
             </div>
           </section>
 
-          <p v-if="notice" class="rounded-panel border border-notice-text/25 bg-notice-bg px-4 py-3 text-sm text-notice-text">
+          <p v-if="notice" class="flex items-center justify-between gap-3 rounded-panel border border-notice-text/25 bg-notice-bg px-4 py-3 text-sm text-notice-text">
             {{ notice }}
+            <button
+              v-if="!quote && recipient"
+              type="button"
+              class="shrink-0 font-medium underline decoration-notice-text/50 underline-offset-2"
+              @click="reconfirm"
+            >
+              Refresh
+            </button>
           </p>
-        </section>
+        </div>
 
         <div class="md:sticky md:top-24">
           <QuoteSummary
             v-if="quote"
-            :send-amount="sendAmount"
-            :fees="fees"
-            :rate="rate"
+            :send-amount="Number(quote.send_amount)"
+            :fees="Number(quote.platform_fee) + Number(quote.network_fee)"
+            :rate="Number(quote.fx_rate)"
             :currency="currency"
-            :expires-at="expiresAt"
+            :target-currency="targetCurrency"
+            :expires-at="new Date(quote.expires_at).getTime()"
             :recipient-name="recipient.account_name"
             :network="recipient.momo_details.network"
-            :platform-fee="Number(quote.platform_fee)"
-            :network-fee="Number(quote.network_fee)"
+            :sender-name="`${sender.networks[0]} wallet`"
             @pay="onPay"
           />
 
           <aside v-else class="rounded-panel border border-line bg-canvas p-6">
-            <div class="flex items-center gap-2.5">
+            <p class="flex items-center gap-2.5 text-xs font-semibold tracking-[0.16em] text-slate">
               <span class="h-1.5 w-1.5 rounded-[2px] bg-volta" aria-hidden="true"></span>
-              <span class="text-xs font-medium tracking-[0.16em] text-slate">REVIEW</span>
-            </div>
-            <p class="mt-4 font-display text-xl font-semibold text-ink">Your review appears here</p>
+              NO TRANSFER FEES
+            </p>
+            <p class="mt-4 font-display text-xl font-semibold text-ink">Review appears here</p>
             <p class="mt-2 text-sm leading-6 text-slate">
-              Enter a verified username and an amount. We lock the rate, show both fees, and the exact
-              cedis that land in Ghana.
+              Enter a verified username and an amount. We lock the rate, keep it free, and show the exact
+              amount that lands in their Mobile Money wallet.
             </p>
           </aside>
         </div>
@@ -352,26 +352,23 @@ onUnmounted(() => {
             </radialGradient>
             <linearGradient id="send-steps-beam" x1="0" y1="0" x2="1" y2="1">
               <stop offset="0%" stop-color="#0F4C57" stop-opacity="0" />
-              <stop offset="60%" stop-color="#2E7C8A" stop-opacity="0.35" />
+              <stop offset="60%" stop-color="#2E7C8A" stop-opacity="0.4" />
               <stop offset="100%" stop-color="#E3A21A" stop-opacity="0.16" />
             </linearGradient>
           </defs>
           <rect width="1200" height="520" fill="url(#send-steps-glow)" />
-          <path
-            d="M-60 400 C120 400 120 456 300 456 C480 456 480 400 660 400 C840 400 840 344 1020 344 C1200 344 1200 400 1380 400 C1560 400 1560 344 1740 344"
-            fill="none"
-            stroke="url(#send-steps-beam)"
-            stroke-width="1.25"
-          />
+          <g fill="none" stroke="rgba(214,230,233,0.06)" stroke-width="1">
+            <circle v-for="r in [90, 164, 238, 312, 386]" :key="r" cx="1200" cy="40" :r="r" />
+          </g>
         </svg>
 
         <div class="relative">
-          <div class="flex items-center gap-2.5">
+          <p class="flex items-center gap-2.5 text-xs font-medium tracking-[0.16em] text-white/55">
             <span class="h-1.5 w-1.5 rounded-[2px] bg-volta-tint" aria-hidden="true"></span>
-            <span class="text-xs font-medium tracking-[0.16em] text-white/55">WHAT HAPPENS NEXT</span>
-          </div>
+            WHAT HAPPENS NEXT
+          </p>
           <h2 class="mt-4 max-w-xl font-display text-3xl font-semibold text-white sm:text-4xl">
-            Four steps from your card to their wallet.
+            Four steps from wallet to wallet.
           </h2>
 
           <div class="mt-10 grid gap-8 border-t-2 border-white/15 pt-8 sm:grid-cols-2 md:grid-cols-4">
@@ -396,6 +393,7 @@ onUnmounted(() => {
       :amount="Number(quote?.total_payable ?? 0)"
       :currency="currency"
       :recipient-name="recipient?.account_name ?? ''"
+      :network="sender.networks[0]"
       @close="checkoutOpen = false"
       @paid="onCheckoutPaid"
     />

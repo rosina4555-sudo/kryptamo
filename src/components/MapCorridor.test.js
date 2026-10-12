@@ -7,9 +7,9 @@ describe('MapCorridor', () => {
   it('labels the map with every source corridor', () => {
     const wrapper = mount(MapCorridor)
     const label = wrapper.get('svg').attributes('aria-label')
-    expect(label).toContain('United States')
-    expect(label).toContain('Canada')
-    expect(label).toContain('United Kingdom')
+    expect(label).toContain('Senegal')
+    expect(label).toContain('Ivory Coast')
+    expect(label).toContain('Nigeria')
     expect(label).toContain('Ghana')
   })
 

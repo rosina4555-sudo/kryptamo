@@ -1,4 +1,24 @@
-const symbols = { USD: '$', CAD: 'C$', GBP: '£', GHS: 'GH₵' }
+const symbols = {
+  USD: '$',
+  CAD: 'C$',
+  GBP: '£',
+  EUR: '€',
+  GHS: 'GH₵',
+  NGN: '₦',
+  KES: 'KSh',
+  UGX: 'USh',
+  TZS: 'TSh',
+  RWF: 'FRw',
+  ZMW: 'ZK',
+  XOF: 'CFA',
+  XAF: 'FCFA',
+  MWK: 'MK',
+  MZN: 'MT',
+  ETB: 'Br',
+  CDF: 'FC',
+  SLE: 'Le',
+  LRD: 'L$',
+}
 
 export function formatMoney(amount, currency, options = {}) {
   const { showCode = false } = options
@@ -12,6 +32,16 @@ export function formatMoney(amount, currency, options = {}) {
 
 export function formatAmount(amount, currency) {
   return `${formatMoney(amount, currency)} ${currency}`
+}
+
+export function formatRate(rate) {
+  const value = Number(rate)
+  if (!Number.isFinite(value) || value === 0) return '0'
+  return String(Number(value.toPrecision(4)))
+}
+
+export function currencySymbol(currency) {
+  return symbols[String(currency ?? '').toUpperCase()] ?? currency
 }
 
 export function formatDateTime(value) {

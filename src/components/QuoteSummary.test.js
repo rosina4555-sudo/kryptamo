@@ -6,9 +6,9 @@ const now = Date.now()
 
 function makeProps(overrides = {}) {
   return {
-    sendAmount: 50,
-    fees: 2,
-    rate: 15.6,
+    sendAmount: 50000,
+    fees: 0,
+    rate: 0.00625,
     expiresAt: now + 5 * 60_000,
     ...overrides,
   }
@@ -16,28 +16,29 @@ function makeProps(overrides = {}) {
 
 function payButton(wrapper, expired = false) {
   const text = expired ? 'Get new quote' : 'Pay'
-  return wrapper.findAll('button').find((b) => b.text().includes(text))
+  return wrapper.findAll('button').find((btn) => btn.text().includes(text))
 }
 
 function feesButton(wrapper) {
-  return wrapper.findAll('button').find((b) => b.text().includes('Fees'))
+  return wrapper.findAll('button').find((btn) => btn.text().includes('Fees'))
 }
 
 describe('QuoteSummary', () => {
-  it('shows the payable total and recipient amount', () => {
+  it('renders the delivered amount and a zero fee line', () => {
     const wrapper = mount(QuoteSummary, { props: makeProps() })
-    const rendered = wrapper.text().replace(/\s+/g, ' ')
-    expect(rendered).toContain('You pay')
-    expect(rendered).toContain('$52.00')
-    expect(rendered).toContain('GH₵780.00')
+    const rendered = wrapper.text()
+    expect(rendered).toContain('₦50,000.00')
+    expect(rendered).toContain('GH₵312.50')
+    expect(rendered).toContain('Free')
+    expect(rendered).toContain('1 NGN = 0.00625 GHS')
   })
 
-  it('shows the rate locked message', () => {
+  it('locks the rate for the quote window', () => {
     const wrapper = mount(QuoteSummary, { props: makeProps() })
     expect(wrapper.text()).toContain('Rate locked for')
   })
 
-  it('disables pay and offers a new quote when expired', () => {
+  it('disables the pay action once the quote expires', () => {
     const wrapper = mount(QuoteSummary, { props: makeProps({ expiresAt: now - 1000 }) })
     const button = payButton(wrapper, true)
     expect(button.attributes('disabled')).toBeDefined()
@@ -50,15 +51,13 @@ describe('QuoteSummary', () => {
     expect(wrapper.emitted('pay')).toHaveLength(1)
   })
 
-  it('itemizes fees on demand when the split is provided', async () => {
+  it('itemizes the fee split on demand', async () => {
     const wrapper = mount(QuoteSummary, {
-      props: makeProps({ platformFee: 1.5, networkFee: 0.5 }),
+      props: makeProps({ platformFee: 0, networkFee: 0 }),
     })
     expect(wrapper.text()).not.toContain('Network fee')
     await feesButton(wrapper).trigger('click')
     expect(wrapper.text()).toContain('Platform fee')
     expect(wrapper.text()).toContain('Network fee')
-    expect(wrapper.text()).toContain('$1.50')
-    expect(wrapper.text()).toContain('$0.50')
   })
 })

@@ -41,7 +41,7 @@ load()
       class="print:hidden"
       eyebrow="RECEIPT"
       title="Transfer receipt"
-      subtitle="A permanent record of this transfer — the rate, both fees, and the cedis delivered to Mobile Money in Ghana."
+      subtitle="A permanent record of this transfer — the rate, the fees, and the local Mobile Money amount delivered."
     >
       <template #aside>
         <aside v-if="transfer" class="space-y-5 border-l-2 border-volta-tint/40 pl-5 md:w-64">
@@ -155,12 +155,12 @@ load()
             v-if="failed"
             class="mt-6 rounded-control border border-alert/25 bg-alert/10 px-4 py-3 text-sm text-alert"
           >
-            This transfer didn’t complete. Any amount collected is refunded to your card automatically.
+            This transfer didn’t complete. Any amount collected is returned to your wallet automatically.
           </p>
           <p v-else class="mt-6 text-xs leading-6 text-slate">
-            Kryptamo is a pass-through remittance service. Your local currency leaves your card, settles
-            on-chain in stablecoins you never see, and lands as cedis in the recipient’s Mobile Money
-            wallet — at the rate quoted. No wallet to top up, no balance held.
+            Kryptamo is a pass-through remittance service. Your local currency leaves your Mobile Money
+            wallet, settles on-chain in stablecoins you never see, and lands as local Mobile Money in the
+            recipient’s wallet — at the rate quoted. No wallet to top up, no balance held.
           </p>
         </div>
       </article>

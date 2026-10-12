@@ -20,14 +20,14 @@ function makeTransfer(overrides = {}) {
     counterparty_name: 'KWAME A. MENSAH',
     counterparty_handle: '@kwame',
     network: 'MTN',
-    send_amount: '50.00',
-    source_currency: 'USD',
-    recipient_gets: '780.00',
+    send_amount: '50000.00',
+    source_currency: 'NGN',
+    recipient_gets: '312.50',
     target_currency: 'GHS',
-    fx_rate: '15.60',
-    platform_fee: '1.50',
-    network_fee: '0.50',
-    total_payable: '52.00',
+    fx_rate: '0.006250',
+    platform_fee: '0.00',
+    network_fee: '0.00',
+    total_payable: '50000.00',
     status: 'PAID_OUT',
     created_at: '2026-10-11T14:35:41Z',
     ...overrides,
@@ -60,8 +60,8 @@ describe('ReceiptView', () => {
     const wrapper = await mountReceipt()
     expect(wrapper.text()).toContain('txn_1')
     expect(wrapper.text()).toContain('KWAME A. MENSAH')
-    expect(wrapper.text()).toContain('GH₵780.00')
-    expect(wrapper.text()).toContain('$52.00')
+    expect(wrapper.text()).toContain('GH₵312.50')
+    expect(wrapper.text()).toContain('₦50,000.00')
     expect(wrapper.text()).toContain('Delivered')
   })
 

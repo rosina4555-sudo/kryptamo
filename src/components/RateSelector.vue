@@ -2,43 +2,16 @@
 import { computed, ref } from 'vue'
 import { ArrowRight } from 'lucide-vue-next'
 import FlagIcon from './FlagIcon.vue'
-import { formatMoney } from '../utils/format'
+import { formatMoney, formatRate, currencySymbol } from '../utils/format'
+import { sendCountries, corridorRate } from '../data/countries'
 
-const corridors = [
-  {
-    code: 'USD',
-    sym: '$',
-    country: 'United States',
-    label: 'US',
-    flag: 'US',
-    rate: 15.6,
-    platform: 1.5,
-    network: 0.5,
-    eta: '10 min',
-  },
-  {
-    code: 'CAD',
-    sym: 'C$',
-    country: 'Canada',
-    label: 'Canada',
-    flag: 'CA',
-    rate: 11.4,
-    platform: 2.0,
-    network: 0.75,
-    eta: '15 min',
-  },
-  {
-    code: 'GBP',
-    sym: '£',
-    country: 'United Kingdom',
-    label: 'UK',
-    flag: 'GB',
-    rate: 19.8,
-    platform: 1.2,
-    network: 0.4,
-    eta: '10 min',
-  },
-]
+const corridors = sendCountries().map((c) => ({
+  code: c.currency,
+  country: c.name,
+  label: c.code,
+  flag: c.code,
+  rate: corridorRate(c.currency, 'GHS'),
+}))
 
 const momo = [
   { name: 'MTN Mobile Money', src: '/momo/mtn.png' },
@@ -46,28 +19,29 @@ const momo = [
   { name: 'AirtelTigo Money', src: '/momo/airteltigo.png' },
 ]
 
-const amount = ref(100)
-const selectedCode = ref('USD')
+const amount = ref(50000)
+const selectedCode = ref('NGN')
 
 const active = computed(() => corridors.find((c) => c.code === selectedCode.value))
 const sent = computed(() => {
   const value = Number(amount.value)
   return Number.isFinite(value) && value > 0 ? value : 0
 })
-const fees = computed(() => active.value.platform + active.value.network)
+const fees = computed(() => 0)
 const recipientGets = computed(() => sent.value * active.value.rate)
+const symbol = computed(() => currencySymbol(active.value.code))
 const amountWidth = computed(() => `calc(${Math.max(3, String(amount.value ?? '').length)}ch + 0.2em)`)
 </script>
 
 <template>
   <div class="overflow-hidden rounded-panel border-2 border-volta bg-canvas">
     <div class="bg-mist p-2">
-      <div class="flex gap-1.5" role="group" aria-label="Sending country">
+      <div class="grid grid-cols-3 gap-1.5" role="group" aria-label="Sending country">
         <button
           v-for="c in corridors"
           :key="c.code"
           type="button"
-          class="flex flex-1 items-center justify-center gap-2 rounded-control px-3 py-2.5 text-sm font-semibold transition-colors"
+          class="flex items-center justify-center gap-2 rounded-control px-2 py-2.5 text-sm font-semibold transition-colors"
           :class="
             c.code === selectedCode
               ? 'bg-canvas text-ink shadow-[0_1px_3px_rgba(23,42,46,0.12)]'
@@ -91,11 +65,11 @@ const amountWidth = computed(() => `calc(${Math.max(3, String(amount.value ?? ''
             <span class="block font-display text-lg font-semibold leading-tight text-ink">
               {{ active.country }}
             </span>
-            <span class="block text-xs font-medium text-slate">{{ active.code }}</span>
+            <span class="block text-xs font-medium text-slate">{{ active.code }} · Mobile Money</span>
           </span>
         </span>
         <label class="flex items-baseline gap-1.5">
-          <span class="font-display text-2xl font-semibold text-slate">{{ active.sym }}</span>
+          <span class="font-display text-2xl font-semibold text-slate">{{ currencySymbol(active.code) }}</span>
           <input
             v-model.number="amount"
             type="number"
@@ -127,20 +101,23 @@ const amountWidth = computed(() => `calc(${Math.max(3, String(amount.value ?? ''
       <p class="mt-4 flex items-center gap-2 text-sm font-medium text-white/80">
         <span class="h-1.5 w-1.5 rounded-[2px] bg-volta-tint"></span>
         1 {{ active.code }} =
-        <span class="font-semibold text-white tabular">{{ active.rate.toFixed(2) }}</span> GHS
+        <span class="font-semibold text-white tabular">{{ formatRate(active.rate) }}</span> GHS
       </p>
     </div>
 
     <div class="space-y-3 px-5 py-5 sm:px-6">
       <div class="flex items-baseline justify-between gap-4">
-        <span class="text-sm font-semibold text-ink">Fees</span>
+        <span class="flex items-center gap-2 text-sm font-semibold text-ink">
+          Fees
+          <span class="rounded-control bg-delivered/10 px-2 py-0.5 text-xs font-semibold text-delivered">Free</span>
+        </span>
         <span class="font-display text-lg font-semibold text-ink tabular">
           {{ formatMoney(fees, active.code) }}
         </span>
       </div>
       <div class="flex items-baseline justify-between gap-4">
         <span class="text-sm font-semibold text-ink">Arrival</span>
-        <span class="font-display text-lg font-semibold text-ink">{{ active.eta }}</span>
+        <span class="font-display text-lg font-semibold text-ink">Seconds</span>
       </div>
     </div>
 

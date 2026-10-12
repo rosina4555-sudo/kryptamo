@@ -1,6 +1,6 @@
 <script setup>
 import { ArrowRight } from 'lucide-vue-next'
-import { MAP_VIEWBOX, MAP_BOUNDS, MAP_SIZE, MAP_COUNTRIES } from '../data/worldMap'
+import { MAP_BOUNDS, MAP_SIZE, MAP_COUNTRIES } from '../data/worldMap'
 
 defineProps({
   animated: { type: Boolean, default: true },
@@ -9,6 +9,8 @@ defineProps({
 const { width: viewW, height: viewH } = MAP_SIZE
 const { lonMin, lonMax, latMin, latMax } = MAP_BOUNDS
 
+const cropViewBox = '705 330 310 170'
+
 const project = ([lon, lat]) => [
   ((lon - lonMin) / (lonMax - lonMin)) * viewW,
   ((latMax - lat) / (latMax - latMin)) * viewH,
@@ -16,9 +18,9 @@ const project = ([lon, lat]) => [
 
 const destination = { id: '288', label: 'Ghana', at: project([-1.2, 7.5]) }
 const sources = [
-  { id: '840', label: 'United States', at: project([-85, 40]), duration: '3.6s' },
-  { id: '124', label: 'Canada', at: project([-100, 55]), duration: '4.2s' },
-  { id: '826', label: 'United Kingdom', at: project([-2, 54]), duration: '3s' },
+  { id: '686', label: 'Senegal', at: project([-14.5, 14.5]), duration: '3.4s' },
+  { id: '384', label: 'Ivory Coast', at: project([-5.5, 7.5]), duration: '3s' },
+  { id: '566', label: 'Nigeria', at: project([8, 9]), duration: '2.6s' },
 ]
 
 const destId = destination.id
@@ -50,18 +52,18 @@ const routes = sources.map((s) => ({
 }))
 
 const graticuleLon = []
-for (let lon = -120; lon <= 20; lon += 20) graticuleLon.push(project([lon, latMin])[0])
+for (let lon = -20; lon <= 20; lon += 10) graticuleLon.push(project([lon, latMin])[0])
 const graticuleLat = []
-for (let lat = 0; lat <= 60; lat += 20) graticuleLat.push(project([0, lat])[1])
+for (let lat = 0; lat <= 60; lat += 10) graticuleLat.push(project([0, lat])[1])
 </script>
 
 <template>
   <div class="relative" :class="animated ? '' : 'map-static'">
     <svg
-      :viewBox="MAP_VIEWBOX"
+      :viewBox="cropViewBox"
       class="w-full"
       role="img"
-      aria-label="A world map showing transfers routing from the United States, Canada and the United Kingdom into Ghana"
+      aria-label="A map of West Africa showing transfers routing from Senegal, Ivory Coast and Nigeria into Ghana"
     >
       <defs>
         <filter id="map-glow" x="-60%" y="-60%" width="220%" height="220%">
@@ -121,14 +123,14 @@ for (let lat = 0; lat <= 60; lat += 20) graticuleLat.push(project([0, lat])[1])
 
       <g class="markers">
         <g v-for="source in sources" :key="`m-${source.id}`">
-          <circle :cx="source.at[0]" :cy="source.at[1]" r="8" class="marker-ring" />
-          <circle :cx="source.at[0]" :cy="source.at[1]" r="4" class="marker-source" />
+          <circle :cx="source.at[0]" :cy="source.at[1]" r="6" class="marker-ring" />
+          <circle :cx="source.at[0]" :cy="source.at[1]" r="3" class="marker-source" />
         </g>
 
         <circle
           :cx="destination.at[0]"
           :cy="destination.at[1]"
-          r="6"
+          r="4.5"
           class="marker-dest"
           filter="url(#map-glow)"
         />
@@ -137,33 +139,38 @@ for (let lat = 0; lat <= 60; lat += 20) graticuleLat.push(project([0, lat])[1])
           class="pulse"
           :cx="destination.at[0]"
           :cy="destination.at[1]"
-          r="6"
+          r="4.5"
           fill="none"
           stroke="var(--color-delivered)"
-          stroke-width="2"
+          stroke-width="1.5"
         />
         <circle
           v-else
           :cx="destination.at[0]"
           :cy="destination.at[1]"
-          r="11"
+          r="8"
           fill="none"
           stroke="rgba(27,127,75,0.5)"
           stroke-width="1"
         />
 
-        <text :x="sources[1].at[0]" :y="sources[1].at[1] - 16" class="map-label" text-anchor="middle">
-          Canada
+        <text :x="sources[0].at[0]" :y="sources[0].at[1] - 10" class="map-label" text-anchor="middle">
+          Senegal
         </text>
-        <text :x="sources[0].at[0]" :y="sources[0].at[1] + 26" class="map-label" text-anchor="middle">
-          United States
+        <text
+          :x="sources[1].at[0] - 8"
+          :y="sources[1].at[1] + 4"
+          class="map-label"
+          text-anchor="end"
+        >
+          Ivory Coast
         </text>
-        <text :x="sources[2].at[0]" :y="sources[2].at[1] - 16" class="map-label" text-anchor="middle">
-          United Kingdom
+        <text :x="sources[2].at[0]" :y="sources[2].at[1] + 18" class="map-label" text-anchor="middle">
+          Nigeria
         </text>
         <text
           :x="destination.at[0]"
-          :y="destination.at[1] + 28"
+          :y="destination.at[1] - 12"
           class="map-label map-label-dest"
           text-anchor="middle"
         >
@@ -175,7 +182,7 @@ for (let lat = 0; lat <= 60; lat += 20) graticuleLat.push(project([0, lat])[1])
     <div class="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-white/70">
       <span class="flex items-center gap-2.5">
         <span class="h-2 w-2 rounded-[2px] bg-white"></span>
-        US · Canada · UK
+        Senegal · Ivory Coast · Nigeria
       </span>
       <ArrowRight :size="16" :stroke-width="1.5" class="text-white/40" />
       <span class="flex items-center gap-2.5">

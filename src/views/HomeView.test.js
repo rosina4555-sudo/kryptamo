@@ -20,7 +20,7 @@ describe('HomeView', () => {
   const text = () => mountView().text().replace(/\s+/g, ' ')
 
   it('renders the headline', () => {
-    expect(text()).toContain('Send money to a person in Ghana.')
+    expect(text()).toContain('Send money across Africa.')
   })
 
   it('renders the send CTA', () => {
@@ -28,10 +28,10 @@ describe('HomeView', () => {
     expect(links).toContain('Send money')
   })
 
-  it('shows the live rate and captured-rate numerals', () => {
+  it('shows the live rate across the launch corridor', () => {
     const rendered = text()
-    expect(rendered).toContain('LIVE 1 USD =')
-    expect(rendered).toContain('15.60')
+    expect(rendered).toContain('LIVE 1 NGN =')
+    expect(rendered).toContain('0.00625')
   })
 
   it('renders the primary call to action', () => {
@@ -39,12 +39,12 @@ describe('HomeView', () => {
     expect(links).toContain('Send your first transfer')
   })
 
-  it('itemizes the fee breakdown', () => {
+  it('itemizes the fee breakdown as free', () => {
     const rendered = text()
     expect(rendered).toContain('Platform fee')
     expect(rendered).toContain('Network fee')
-    expect(rendered).toContain('$1.50')
-    expect(rendered).toContain('$0.50')
+    expect(rendered).toContain('GH₵0.00')
+    expect(rendered).toContain('Free')
   })
 
   it('renders the rate conversion selector under the hero', () => {
@@ -66,7 +66,7 @@ describe('HomeView', () => {
     const wrapper = mountView()
     const rendered = wrapper.text().replace(/\s+/g, ' ')
     expect(rendered).toContain('REFERENCE RATE')
-    expect(rendered).toContain('GHS per USD')
+    expect(rendered).toContain('NGN → GHS')
     expect(wrapper.find('footer svg[aria-hidden="true"]').exists()).toBe(true)
     const links = wrapper.findAll('footer a').map((link) => link.text())
     expect(links).toContain('Create account')

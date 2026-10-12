@@ -16,17 +16,17 @@ const buttonByText = (wrapper, label) =>
   wrapper.findAll('button').find((button) => button.text().includes(label))
 
 describe('RateSelector', () => {
-  it('defaults to sending 100 USD and shows the cedis received', () => {
+  it('defaults to sending 50,000 NGN and shows the cedis received', () => {
     const wrapper = mountSelector()
-    expect(wrapper.get('input').element.value).toBe('100')
-    expect(wrapper.text()).toContain('GH₵1,560.00')
+    expect(wrapper.get('input').element.value).toBe('50000')
+    expect(wrapper.text()).toContain('GH₵312.50')
   })
 
   it('recalculates when the sending country changes', async () => {
     const wrapper = mountSelector()
-    await buttonByText(wrapper, 'Canada').trigger('click')
-    expect(wrapper.text()).toContain('1 CAD =')
-    expect(wrapper.text()).toContain('GH₵1,140.00')
+    await buttonByText(wrapper, 'KE').trigger('click')
+    expect(wrapper.text()).toContain('1 KES =')
+    expect(wrapper.text()).toContain('GH₵4,545.45')
   })
 
   it('shows the sender and recipient country flags', () => {
@@ -45,12 +45,13 @@ describe('RateSelector', () => {
     expect(alts).toContain('AirtelTigo Money')
   })
 
-  it('shows the fees and estimated arrival time', () => {
+  it('shows free fees and the estimated arrival time', () => {
     const wrapper = mountSelector()
     const rendered = wrapper.text()
     expect(rendered).toContain('Fees')
-    expect(rendered).toContain('$2.00')
+    expect(rendered).toContain('Free')
+    expect(rendered).toContain('₦0.00')
     expect(rendered).toContain('Arrival')
-    expect(rendered).toContain('10 min')
+    expect(rendered).toContain('Seconds')
   })
 })

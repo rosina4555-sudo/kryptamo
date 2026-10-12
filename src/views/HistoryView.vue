@@ -7,14 +7,13 @@ import StatusChip from '../components/StatusChip.vue'
 import FlagIcon from '../components/FlagIcon.vue'
 import { transfers } from '../api'
 import { formatDateTime, formatMoney } from '../utils/format'
+import { countryCodeForCurrency } from '../data/countries'
 
 const networkLogos = {
   MTN: '/momo/mtn.png',
   Telecel: '/momo/telecel.png',
   AirtelTigo: '/momo/airteltigo.png',
 }
-
-const sourceFlags = { USD: 'US', CAD: 'CA', GBP: 'GB' }
 
 const items = ref([])
 const page = ref(1)
@@ -55,7 +54,7 @@ load()
     <PageMasthead
       eyebrow="ACTIVITY"
       title="Your transfers"
-      subtitle="Everything you have sent to Ghana, newest first. Open any transfer to see its live progress and receipt."
+      subtitle="Everything you have sent across Africa, newest first. Open any transfer to see its live progress and receipt."
     >
       <template #aside>
         <aside class="border-l-2 border-volta-tint/40 pl-5 md:w-64">
@@ -63,10 +62,10 @@ load()
           <p class="mt-3 font-display text-4xl font-semibold leading-none text-white tabular">
             {{ loading ? '—' : count }}
           </p>
-          <p class="mt-2 text-sm text-white/60">transfers to Ghana</p>
+          <p class="mt-2 text-sm text-white/60">transfers across Africa</p>
           <p class="mt-4 flex items-center gap-2 text-sm text-white/60 tabular">
             <span class="h-1.5 w-1.5 rounded-[2px] bg-volta-tint" aria-hidden="true"></span>
-            US · Canada · UK → GHS
+            Africa → Mobile Money
           </p>
         </aside>
       </template>
@@ -97,7 +96,7 @@ load()
         <p class="mt-5 font-display text-2xl font-semibold text-ink">No transfers yet</p>
         <p class="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate">
           Enter a verified username on the send screen and your first transfer will appear here, tracked
-          from the first payment to the last cedi.
+          from the first payment to the last payout.
         </p>
         <RouterLink
           to="/send"
@@ -135,12 +134,18 @@ load()
                 </p>
                 <p class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate">
                   <span class="inline-flex items-center gap-1.5">
-                    <FlagIcon :code="sourceFlags[item.source_currency] ?? 'US'" class="h-3 w-[18px] rounded-[2px]" />
+                    <FlagIcon
+                      :code="countryCodeForCurrency(item.source_currency) ?? 'NG'"
+                      class="h-3 w-[18px] rounded-[2px]"
+                    />
                     {{ item.source_currency }}
                   </span>
                   <ArrowRight :size="12" :stroke-width="1.5" />
                   <span class="inline-flex items-center gap-1.5">
-                    <FlagIcon code="GH" class="h-3 w-[18px] rounded-[2px]" />
+                    <FlagIcon
+                      :code="countryCodeForCurrency(item.target_currency) ?? 'GH'"
+                      class="h-3 w-[18px] rounded-[2px]"
+                    />
                     {{ item.target_currency }}
                   </span>
                   <span class="hidden h-1 w-1 rounded-[1px] bg-slate sm:block" aria-hidden="true"></span>

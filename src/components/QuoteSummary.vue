@@ -1,18 +1,18 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { ArrowRight, ArrowUpRight, BadgeCheck, Banknote, ChevronDown, ReceiptText, Timer } from 'lucide-vue-next'
-import { formatMoney } from '../utils/format'
+import { formatMoney, formatRate } from '../utils/format'
 
 const props = defineProps({
   sendAmount: { type: Number, required: true },
   fees: { type: Number, required: true },
   rate: { type: Number, required: true },
-  currency: { type: String, default: 'USD' },
+  currency: { type: String, default: 'NGN' },
   targetCurrency: { type: String, default: 'GHS' },
   expiresAt: { type: Number, required: true },
   recipientName: { type: String, default: 'Recipient' },
   network: { type: String, default: 'Mobile Money' },
-  senderName: { type: String, default: 'Your card' },
+  senderName: { type: String, default: 'Your wallet' },
   platformFee: { type: Number, default: undefined },
   networkFee: { type: Number, default: undefined },
 })
@@ -32,6 +32,7 @@ onUnmounted(() => clearInterval(timer))
 
 const totalPayable = computed(() => props.sendAmount + props.fees)
 const recipientGets = computed(() => (props.sendAmount * props.rate).toFixed(2))
+const isFree = computed(() => props.fees === 0)
 const itemized = computed(
   () => props.platformFee !== undefined && props.networkFee !== undefined,
 )
@@ -77,7 +78,7 @@ const expired = computed(() => secondsLeft.value === 0)
         {{ formatMoney(recipientGets, targetCurrency) }}
       </p>
       <p class="mt-2 text-sm font-medium text-slate tabular">
-        1 {{ currency }} = {{ rate.toFixed(2) }} {{ targetCurrency }}
+        1 {{ currency }} = {{ formatRate(rate) }} {{ targetCurrency }}
       </p>
     </div>
 
@@ -101,6 +102,12 @@ const expired = computed(() => secondsLeft.value === 0)
             <ReceiptText :size="18" :stroke-width="1.5" />
           </span>
           <span class="flex-1 text-base text-ink transition-colors group-hover:text-volta">Fees</span>
+          <span
+            v-if="isFree"
+            class="rounded-control bg-delivered/10 px-2 py-0.5 text-xs font-semibold text-delivered"
+          >
+            Free
+          </span>
           <span class="text-base font-semibold text-ink tabular">{{ formatMoney(fees, currency) }}</span>
           <ChevronDown
             :size="18"

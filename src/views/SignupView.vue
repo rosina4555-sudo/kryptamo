@@ -91,7 +91,7 @@ const signUp = async () => {
         <h2 class="mt-4 font-display text-4xl font-semibold leading-tight text-white">Create your account.</h2>
         <p class="mt-4 text-base leading-7 text-white/70">
           A username is all your sender needs. No wallet to top up, no balance to hold — just money
-          moving to a Mobile Money account in Ghana.
+          moving to a Mobile Money account anywhere in Africa.
         </p>
 
         <ul class="mt-8 space-y-3.5 border-t border-white/12 pt-6">
@@ -115,7 +115,7 @@ const signUp = async () => {
       </div>
 
       <p class="relative text-sm text-white/50 tabular">
-        1 USD = 15.60 · 1 CAD = 11.40 · 1 GBP = 19.80 GHS
+          No transfer fees · Africa → Mobile Money
       </p>
     </aside>
 

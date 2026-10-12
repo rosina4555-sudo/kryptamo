@@ -80,7 +80,7 @@ const requestReset = () => {
         <h2 class="font-display text-4xl font-semibold leading-tight text-white">Welcome back.</h2>
         <p class="mt-4 text-base leading-7 text-white/70">
           Sign in to pick up your transfers, lock today’s rate, and keep sending straight to Mobile
-          Money in Ghana.
+          Money across Africa.
         </p>
 
         <div class="mt-9 rounded-panel border border-white/10 bg-white/[0.02] p-4">
@@ -89,7 +89,7 @@ const requestReset = () => {
       </div>
 
       <p class="relative text-sm text-white/50 tabular">
-        1 USD = 15.60 · 1 CAD = 11.40 · 1 GBP = 19.80 GHS
+        No transfer fees · Mobile Money to Mobile Money
       </p>
     </aside>
 

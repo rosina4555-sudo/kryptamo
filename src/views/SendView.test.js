@@ -40,25 +40,25 @@ afterEach(() => {
 })
 
 describe('SendView', () => {
-  it('verifies a username and shows the quoted cedis', async () => {
+  it('verifies a username and shows the quoted amount', async () => {
     const { wrapper } = mountSend()
     await wrapper.get('#handle').setValue('kwame')
     await vi.advanceTimersByTimeAsync(1200)
     await flushPromises()
     expect(wrapper.text()).toContain('KWAME A. MENSAH')
-    expect(wrapper.text()).toContain('GH₵780.00')
-    expect(wrapper.text()).toContain('$52.00')
+    expect(wrapper.text()).toContain('GH₵312.50')
+    expect(wrapper.text()).toContain('₦50,000.00')
   })
 
-  it('requotes when the send currency changes', async () => {
+  it('requotes when the send country changes', async () => {
     const { wrapper } = mountSend()
-    const gbp = wrapper.findAll('button').find((btn) => btn.text().includes('GBP'))
-    await gbp.trigger('click')
+    const kenya = wrapper.findAll('button').find((btn) => btn.text().includes('Kenya'))
+    await kenya.trigger('click')
     await wrapper.get('#handle').setValue('kwame')
     await vi.advanceTimersByTimeAsync(1200)
     await flushPromises()
-    expect(wrapper.text()).toContain('GH₵990.00')
-    expect(wrapper.text()).toContain('£51.60')
+    expect(wrapper.text()).toContain('GH₵4,545.45')
+    expect(wrapper.text()).toContain('KSh50,000.00')
   })
 
   it('reports an unknown username', async () => {
@@ -83,7 +83,7 @@ describe('SendView', () => {
     await vi.advanceTimersByTimeAsync(1200)
     await flushPromises()
 
-    await findButton(wrapper, 'Pay $52.00').trigger('click')
+    await findButton(wrapper, 'Pay ₦50,000.00').trigger('click')
     await vi.advanceTimersByTimeAsync(10)
     await flushPromises()
 
@@ -91,7 +91,7 @@ describe('SendView', () => {
     expect(dialog.exists()).toBe(true)
     expect(dialog.text()).toContain('checkout.honeycoin.app')
 
-    await dialog.findAll('button').find((btn) => btn.text().includes('Pay $52.00')).trigger('click')
+    await dialog.findAll('button').find((btn) => btn.text().includes('Pay ₦50,000.00')).trigger('click')
     await vi.advanceTimersByTimeAsync(1000)
     await flushPromises()
 

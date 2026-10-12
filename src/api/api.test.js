@@ -89,24 +89,26 @@ describe('quotes.create', () => {
   it('computes the recipient amount and fees', async () => {
     const quote = await quotes.create({
       recipient_username: 'kwame',
-      amount: 50,
-      source_currency: 'USD',
+      amount: 50000,
+      source_currency: 'NGN',
       target_currency: 'GHS',
     })
-    expect(quote.recipient_gets).toBe('780.00')
-    expect(quote.total_payable).toBe('52.00')
+    expect(quote.recipient_gets).toBe('312.50')
+    expect(quote.total_payable).toBe('50000.00')
+    expect(quote.platform_fee).toBe('0.00')
+    expect(quote.network_fee).toBe('0.00')
     expect(new Date(quote.expires_at).getTime()).toBeGreaterThan(Date.now())
   })
 
   it('rejects an unknown recipient', async () => {
     await expect(
-      quotes.create({ recipient_username: 'ghost', amount: 10, source_currency: 'USD' }),
+      quotes.create({ recipient_username: 'ghost', amount: 100, source_currency: 'NGN' }),
     ).rejects.toMatchObject({ error_code: 'USER_NOT_FOUND' })
   })
 
   it('rejects amounts above the daily limit', async () => {
     await expect(
-      quotes.create({ recipient_username: 'kwame', amount: 20000, source_currency: 'USD' }),
+      quotes.create({ recipient_username: 'kwame', amount: 6_000_000, source_currency: 'NGN' }),
     ).rejects.toMatchObject({ error_code: 'LIMIT_EXCEEDED' })
   })
 })
@@ -124,10 +126,10 @@ describe('transfers', () => {
   })
 
   it('creates a transfer and advances it to paid out', async () => {
-    const quote = await quotes.create({ recipient_username: 'kwame', amount: 50, source_currency: 'USD' })
+    const quote = await quotes.create({ recipient_username: 'kwame', amount: 50000, source_currency: 'NGN' })
     const created = await transfers.create({
       quote_id: quote.quote_id,
-      payment_method: { type: 'card' },
+      payment_method: { type: 'mobile_money', network: 'MTN MoMo' },
       idempotency_key: 'idem-1',
     })
     expect(created.status).toBe('FUNDING_PENDING')
@@ -144,7 +146,7 @@ describe('transfers', () => {
   })
 
   it('is idempotent for a repeated key', async () => {
-    const quote = await quotes.create({ recipient_username: 'kwame', amount: 50, source_currency: 'USD' })
+    const quote = await quotes.create({ recipient_username: 'kwame', amount: 50000, source_currency: 'NGN' })
     const first = await transfers.create({ quote_id: quote.quote_id, idempotency_key: 'idem-2' })
     const second = await transfers.create({ quote_id: quote.quote_id, idempotency_key: 'idem-2' })
     expect(second.transfer_id).toBe(first.transfer_id)
