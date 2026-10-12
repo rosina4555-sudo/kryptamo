@@ -19,11 +19,15 @@ function payButton(wrapper, expired = false) {
   return wrapper.findAll('button').find((b) => b.text().includes(text))
 }
 
+function feesButton(wrapper) {
+  return wrapper.findAll('button').find((b) => b.text().includes('Fees'))
+}
+
 describe('QuoteSummary', () => {
   it('shows the payable total and recipient amount', () => {
     const wrapper = mount(QuoteSummary, { props: makeProps() })
     const rendered = wrapper.text().replace(/\s+/g, ' ')
-    expect(rendered).toContain('Total you pay')
+    expect(rendered).toContain('You pay')
     expect(rendered).toContain('$52.00')
     expect(rendered).toContain('GH₵780.00')
   })
@@ -51,7 +55,7 @@ describe('QuoteSummary', () => {
       props: makeProps({ platformFee: 1.5, networkFee: 0.5 }),
     })
     expect(wrapper.text()).not.toContain('Network fee')
-    await wrapper.get('.flex button').trigger('click')
+    await feesButton(wrapper).trigger('click')
     expect(wrapper.text()).toContain('Platform fee')
     expect(wrapper.text()).toContain('Network fee')
     expect(wrapper.text()).toContain('$1.50')

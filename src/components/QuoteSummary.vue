@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { ArrowDownLeft, Banknote, ChevronDown, ReceiptText, Send, Timer } from 'lucide-vue-next'
+import { ArrowRight, ArrowUpRight, BadgeCheck, Banknote, ChevronDown, ReceiptText, Timer } from 'lucide-vue-next'
 import { formatMoney } from '../utils/format'
 
 const props = defineProps({
@@ -11,6 +11,8 @@ const props = defineProps({
   targetCurrency: { type: String, default: 'GHS' },
   expiresAt: { type: Number, required: true },
   recipientName: { type: String, default: 'Recipient' },
+  network: { type: String, default: 'Mobile Money' },
+  senderName: { type: String, default: 'Your card' },
   platformFee: { type: Number, default: undefined },
   networkFee: { type: Number, default: undefined },
 })
@@ -40,109 +42,107 @@ const mmss = computed(() => {
   return `${m}:${String(s).padStart(2, '0')}`
 })
 const expired = computed(() => secondsLeft.value === 0)
-const ringR = 8
-const ringC = 2 * Math.PI * ringR
 </script>
 
 <template>
-  <aside class="rounded-panel border border-line bg-canvas shadow-overlay">
-    <header class="flex items-center justify-between border-b border-line px-5 py-4">
-      <span class="font-display text-lg font-semibold text-ink">Review</span>
-      <span class="flex items-center gap-2 text-xs text-slate tabular">
-        <Timer :size="14" class="text-gold" :stroke-width="1.5" />
-        {{ expired ? 'Rate expired' : mmss }}
+  <aside class="overflow-hidden rounded-control border-2 border-ink bg-canvas">
+    <header class="flex items-center justify-between bg-volta px-5 py-5">
+      <span class="flex items-center gap-2 font-display text-xl font-semibold text-white">Review</span>
+      <span class="flex items-center gap-2 text-sm font-medium text-white tabular">
+        <Timer :size="16" :stroke-width="1.5" class="text-gold" />
+        {{ expired ? 'Rate expired' : `Rate locked for ${mmss}` }}
       </span>
     </header>
 
-    <dl class="space-y-4 px-5 py-5 text-sm">
-      <div class="flex items-center gap-3">
-        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-control bg-volta-tint text-volta">
-          <Send :size="14" :stroke-width="1.5" />
+    <div class="flex items-stretch overflow-hidden border-b-2 border-ink">
+      <div class="flex-1 bg-ink px-4 py-4">
+        <p class="text-xs font-medium text-white/60">{{ currency }}</p>
+        <p class="mt-0.5 font-display text-lg font-semibold text-white">{{ senderName }}</p>
+      </div>
+      <div class="flex items-center justify-center bg-volta px-4 text-white">
+        <ArrowRight :size="20" :stroke-width="2" />
+      </div>
+      <div class="flex-1 bg-volta px-4 py-4 text-right">
+        <p class="text-xs font-medium text-white/70">{{ targetCurrency }}</p>
+        <p class="mt-0.5 font-display text-lg font-semibold text-white">{{ recipientName }}</p>
+      </div>
+    </div>
+
+    <div class="px-5 py-6">
+      <div class="flex items-center gap-1.5 text-sm font-semibold text-volta">
+        <BadgeCheck :size="16" :stroke-width="1.5" class="text-delivered" />
+        {{ recipientName }} gets
+      </div>
+      <p class="mt-2 font-display text-[56px] font-semibold leading-[1.05] text-ink tabular sm:text-[64px]">
+        {{ formatMoney(recipientGets, targetCurrency) }}
+      </p>
+      <p class="mt-2 text-sm font-medium text-slate tabular">
+        1 {{ currency }} = {{ rate.toFixed(2) }} {{ targetCurrency }}
+      </p>
+    </div>
+
+    <div class="border-t border-line">
+      <div class="flex items-center gap-4 px-5 py-3.5">
+        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-mist text-ink">
+          <ArrowUpRight :size="18" :stroke-width="1.5" />
         </span>
-        <dt class="flex-1 text-slate">You send</dt>
-        <dd class="font-medium text-ink tabular">{{ formatMoney(sendAmount, currency) }}</dd>
+        <p class="flex-1 text-base text-ink">You send</p>
+        <p class="text-base font-semibold text-ink tabular">{{ formatMoney(sendAmount, currency) }}</p>
       </div>
 
-      <div class="flex items-center gap-3">
-        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-control bg-mist text-ink">
-          <ReceiptText :size="14" :stroke-width="1.5" />
-        </span>
+      <div class="border-t border-line">
         <button
           type="button"
-          class="flex flex-1 items-center gap-1 text-left text-slate"
+          class="group flex w-full items-center gap-4 px-5 py-3.5 text-left"
           :aria-expanded="showFees"
           @click="showFees = !showFees"
         >
-          Fees
+          <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-mist text-ink">
+            <ReceiptText :size="18" :stroke-width="1.5" />
+          </span>
+          <span class="flex-1 text-base text-ink transition-colors group-hover:text-volta">Fees</span>
+          <span class="text-base font-semibold text-ink tabular">{{ formatMoney(fees, currency) }}</span>
           <ChevronDown
-            v-if="itemized"
-            :size="14"
+            :size="18"
             :stroke-width="1.5"
-            class="transition-transform"
+            class="text-slate transition-transform duration-150"
             :class="showFees ? 'rotate-180' : ''"
           />
         </button>
-        <dd class="font-medium text-ink tabular">{{ formatMoney(fees, currency) }}</dd>
+
+        <Transition name="expand">
+          <div v-if="itemized && showFees" class="space-y-2.5 pb-3.5 pl-[68px] pr-5 text-sm text-slate">
+            <div class="flex items-center justify-between">
+              <span class="flex items-center gap-2">
+                <span class="h-2 w-2 rounded-[2px] bg-volta" aria-hidden="true"></span>
+                Platform fee
+              </span>
+              <span class="font-medium text-ink tabular">{{ formatMoney(platformFee, currency) }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="flex items-center gap-2">
+                <span class="h-2 w-2 rounded-[2px] bg-slate" aria-hidden="true"></span>
+                Network fee
+              </span>
+              <span class="font-medium text-ink tabular">{{ formatMoney(networkFee, currency) }}</span>
+            </div>
+          </div>
+        </Transition>
       </div>
 
-      <div v-if="itemized && showFees" class="space-y-2 pl-11">
-        <div class="flex items-center justify-between text-xs text-slate">
-          <span>Platform fee</span>
-          <span class="tabular">{{ formatMoney(platformFee, currency) }}</span>
-        </div>
-        <div class="flex items-center justify-between text-xs text-slate">
-          <span>Network fee</span>
-          <span class="tabular">{{ formatMoney(networkFee, currency) }}</span>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-3 border-t border-line pt-4">
-        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-control bg-volta text-white">
-          <Banknote :size="14" :stroke-width="1.5" />
+      <div class="flex items-center gap-4 border-t border-ink bg-ink px-5 py-4">
+        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-volta text-white">
+          <Banknote :size="18" :stroke-width="1.5" />
         </span>
-        <dt class="flex-1 font-medium text-ink">Total you pay</dt>
-        <dd class="font-semibold text-ink tabular">{{ formatMoney(totalPayable, currency) }}</dd>
+        <p class="flex-1 text-base font-semibold text-white">You pay</p>
+        <p class="text-xl font-bold text-white tabular">{{ formatMoney(totalPayable, currency) }}</p>
       </div>
-    </dl>
-
-    <div class="border-t border-line px-5 pb-5 pt-4">
-      <div class="flex items-center gap-2 text-xs font-medium text-slate">
-        <ArrowDownLeft :size="14" :stroke-width="1.5" class="text-volta" />
-        {{ recipientName }} gets
-      </div>
-      <p class="mt-1.5 font-ui text-[40px] font-semibold leading-[44px] text-ink tabular">
-        {{ formatMoney(recipientGets, targetCurrency) }}
-      </p>
-      <p class="mt-1 text-xs text-slate tabular">1 {{ currency }} = {{ rate.toFixed(2) }} {{ targetCurrency }}</p>
     </div>
 
-    <div class="px-5 pb-5">
-      <div
-        class="mb-3 flex items-center justify-between rounded-control px-3 py-2"
-        :class="expired ? 'bg-notice-bg' : 'bg-mist'"
-      >
-        <span class="text-xs font-medium" :class="expired ? 'text-notice-text' : 'text-ink'">
-          {{ expired ? 'Rate expired' : 'Rate locked for 5:00' }}
-        </span>
-        <svg viewBox="0 0 20 20" class="h-5 w-5 -rotate-90" role="img" :aria-label="`Rate locked for ${mmss}`">
-          <circle cx="10" cy="10" r="8" fill="none" stroke="var(--color-line)" stroke-width="2" />
-          <circle
-            cx="10"
-            cy="10"
-            r="8"
-            fill="none"
-            stroke="var(--color-gold)"
-            stroke-width="2"
-            stroke-linecap="round"
-            :stroke-dasharray="ringC"
-            :stroke-dashoffset="ringC * (1 - secondsLeft / 300)"
-          />
-        </svg>
-      </div>
-
+    <div class="px-5 py-5">
       <button
         type="button"
-        class="h-12 w-full rounded-control bg-volta font-medium text-white transition-colors duration-150 hover:bg-volta-deep disabled:cursor-not-allowed disabled:bg-mist disabled:text-slate"
+        class="h-13 w-full rounded-control bg-volta text-base font-semibold text-white transition-all duration-150 hover:bg-volta-deep active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-mist disabled:text-slate disabled:active:scale-100"
         :disabled="expired"
         @click="emit('pay')"
       >
@@ -151,3 +151,17 @@ const ringC = 2 * Math.PI * ringR
     </div>
   </aside>
 </template>
+
+<style scoped>
+.expand-enter-active,
+.expand-leave-active {
+  transition:
+    opacity 150ms ease-out,
+    transform 150ms ease-out;
+}
+.expand-enter-from,
+.expand-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+</style>

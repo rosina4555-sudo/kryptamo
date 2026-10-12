@@ -1,4 +1,4 @@
-const symbols = { USD: '$', GHS: 'GH₵' }
+const symbols = { USD: '$', CAD: 'C$', GBP: '£', GHS: 'GH₵' }
 
 export function formatMoney(amount, currency, options = {}) {
   const { showCode = false } = options
@@ -12,6 +12,19 @@ export function formatMoney(amount, currency, options = {}) {
 
 export function formatAmount(amount, currency) {
   return `${formatMoney(amount, currency)} ${currency}`
+}
+
+export function formatDateTime(value) {
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  }).format(date)
 }
 
 export function initials(name) {

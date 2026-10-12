@@ -11,9 +11,9 @@ defineProps({
 </script>
 
 <template>
-  <div class="flex items-start gap-4 rounded-panel border border-line bg-canvas p-4 shadow-overlay">
+  <div class="flex items-start gap-4 rounded-panel border border-line bg-canvas p-4">
     <div
-      class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-volta-tint font-display text-lg font-semibold text-volta"
+      class="flex h-12 w-12 shrink-0 items-center justify-center rounded-control bg-volta-tint font-display text-lg font-semibold text-volta"
     >
       {{ initials(recipient.account_name) }}
     </div>
@@ -23,7 +23,8 @@ defineProps({
       </p>
       <div class="mt-1 flex items-center gap-2">
         <span class="text-sm text-slate">@{{ recipient.username }}</span>
-        <span class="flex items-center gap-1 rounded-full bg-mist px-2 py-0.5 text-xs text-slate">
+        <span class="h-1.5 w-1.5 rounded-[2px] bg-slate"></span>
+        <span class="flex items-center gap-1.5 text-xs text-slate">
           <Smartphone :size="12" :stroke-width="1.5" />
           {{ recipient.momo_details.network }} Mobile Money
         </span>

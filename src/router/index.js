@@ -14,6 +14,31 @@ const router = createRouter({
       name: 'send',
       component: () => import('../views/SendView.vue'),
     },
+    {
+      path: '/signin',
+      name: 'signin',
+      component: () => import('../views/LoginView.vue'),
+    },
+    {
+      path: '/signup',
+      name: 'signup',
+      component: () => import('../views/SignupView.vue'),
+    },
+    {
+      path: '/transfers',
+      name: 'transfers',
+      component: () => import('../views/HistoryView.vue'),
+    },
+    {
+      path: '/transfers/:id',
+      name: 'transfer-tracking',
+      component: () => import('../views/TrackingView.vue'),
+    },
+    {
+      path: '/transfers/:id/receipt',
+      name: 'transfer-receipt',
+      component: () => import('../views/ReceiptView.vue'),
+    },
   ],
 })
 
