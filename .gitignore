@@ -24,4 +24,7 @@ dist-ssr
 *.sw?
 
 # System docs
-kryptamo.docsx
+kryptamo.docx
+
+# Agent instructions
+AGENTS.md
