@@ -26,5 +26,8 @@ dist-ssr
 # System docs
 kryptamo.docx
 
+# Design docs
+Kryptamo Design Specification.docx
+
 # Agent instructions
 AGENTS.md
