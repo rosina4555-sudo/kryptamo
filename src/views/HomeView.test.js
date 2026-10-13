@@ -10,6 +10,8 @@ function mountView() {
     routes: [
       { path: '/', name: 'home', component: HomeView },
       { path: '/send', name: 'send', component: SendView },
+      { path: '/signin', component: { template: '<div />' } },
+      { path: '/signup', component: { template: '<div />' } },
     ],
   })
   router.push('/')
@@ -43,6 +45,15 @@ describe('HomeView', () => {
     const rendered = text()
     expect(rendered).toContain('Any African country to any African country.')
     expect(rendered).toContain('20 African countries')
+  })
+
+  it('answers common questions in the FAQ', () => {
+    const wrapper = mountView()
+    const rendered = wrapper.text().replace(/\s+/g, ' ')
+    expect(rendered).toContain('Questions, answered.')
+    expect(wrapper.findAll('details').length).toBe(6)
+    expect(rendered).toContain('How is Kryptamo free?')
+    expect(rendered).toContain('Does Kryptamo hold my money?')
   })
 
   it('itemizes the fee breakdown as free', () => {

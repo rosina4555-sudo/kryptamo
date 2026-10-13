@@ -5,6 +5,7 @@ import MapCorridor from '../components/MapCorridor.vue'
 import TransferTracker from '../components/TransferTracker.vue'
 import RateChart from '../components/RateChart.vue'
 import RateSelector from '../components/RateSelector.vue'
+import FaqSection from '../components/FaqSection.vue'
 import { formatMoney, formatRate } from '../utils/format'
 import { corridorRate } from '../data/countries'
 
@@ -310,6 +311,8 @@ onUnmounted(() => {
           </RouterLink>
         </div>
       </section>
+
+      <FaqSection />
     </main>
 
     <footer class="relative mt-20 overflow-hidden bg-ink text-white">

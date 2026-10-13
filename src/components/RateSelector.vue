@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-vue-next'
 import FlagIcon from './FlagIcon.vue'
 import { formatMoney, formatRate, currencySymbol } from '../utils/format'
 import { COUNTRIES, countryByCode, corridorRate, emojiFlag } from '../data/countries'
+import { networkColor, networkInitials, networkLogo } from '../utils/networks'
 
 const amount = ref(50000)
 const fromCode = ref('NG')
@@ -142,14 +143,28 @@ const swap = () => {
           Swap
         </button>
       </div>
-      <div class="mt-3 flex flex-wrap gap-2">
-        <span
-          v-for="network in to.networks"
-          :key="network"
-          class="rounded-control border border-line bg-mist px-2.5 py-1 text-xs font-medium text-ink"
-        >
-          {{ network }}
-        </span>
+      <div class="mt-3 flex flex-wrap items-center gap-x-5 gap-y-3">
+        <template v-for="network in to.networks" :key="network">
+          <img
+            v-if="networkLogo(network)"
+            :src="networkLogo(network)"
+            :alt="network"
+            class="h-11 w-auto object-contain"
+          />
+          <span
+            v-else
+            class="flex h-11 items-center gap-2.5 rounded-control border border-line bg-canvas px-3"
+          >
+            <span
+              class="flex h-7 w-7 items-center justify-center rounded-[5px] text-[11px] font-bold text-white"
+              :style="{ backgroundColor: networkColor(network) }"
+              aria-hidden="true"
+            >
+              {{ networkInitials(network) }}
+            </span>
+            <span class="text-sm font-medium text-ink">{{ network }}</span>
+          </span>
+        </template>
       </div>
     </div>
   </div>

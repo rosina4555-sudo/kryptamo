@@ -8,12 +8,7 @@ import FlagIcon from '../components/FlagIcon.vue'
 import { transfers } from '../api'
 import { formatDateTime, formatMoney } from '../utils/format'
 import { countryCodeForCurrency } from '../data/countries'
-
-const networkLogos = {
-  MTN: '/momo/mtn.png',
-  Telecel: '/momo/telecel.png',
-  AirtelTigo: '/momo/airteltigo.png',
-}
+import { networkInitials, networkLogo } from '../utils/networks'
 
 const items = ref([])
 const page = ref(1)
@@ -120,12 +115,12 @@ load()
             >
               <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-control border border-line bg-canvas">
                 <img
-                  v-if="networkLogos[item.network]"
-                  :src="networkLogos[item.network]"
+                  v-if="networkLogo(item.network)"
+                  :src="networkLogo(item.network)"
                   :alt="item.network"
                   class="h-6 w-auto"
                 />
-                <span v-else class="text-xs font-semibold text-slate">{{ item.network?.slice(0, 2) }}</span>
+                <span v-else class="text-xs font-semibold text-slate">{{ networkInitials(item.network) }}</span>
               </span>
 
               <div class="min-w-0 flex-1">

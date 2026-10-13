@@ -53,12 +53,19 @@ describe('RateSelector', () => {
     expect(wrapper.text()).toContain('Mobile Money')
   })
 
-  it('lists the Mobile Money providers for the receiving country', () => {
+  it('shows the real Mobile Money provider logos', () => {
     const wrapper = mountSelector()
     expect(wrapper.text()).toContain('Pays out to Ghana')
-    expect(wrapper.text()).toContain('MTN Mobile Money')
-    expect(wrapper.text()).toContain('Telecel Cash')
-    expect(wrapper.text()).toContain('AirtelTigo Money')
+    const alts = wrapper.findAll('img').map((img) => img.attributes('alt'))
+    expect(alts).toEqual(['MTN Mobile Money', 'Telecel Cash', 'AirtelTigo Money'])
+  })
+
+  it('badges providers that have no logo asset', async () => {
+    const wrapper = mountSelector()
+    await select(wrapper, 'Receiving country').setValue('KE')
+    expect(wrapper.findAll('img').length).toBe(0)
+    expect(wrapper.text()).toContain('M-Pesa')
+    expect(wrapper.text()).toContain('Airtel Money')
   })
 
   it('shows free fees and the estimated arrival time', () => {
