@@ -45,6 +45,12 @@ const trackerSteps = [
 const trackerIndex = ref(1)
 let trackerTimer
 
+const prefersReducedMotion = ref(false)
+let motionQuery
+const onMotionChange = (event) => {
+  prefersReducedMotion.value = event.matches
+}
+
 onMounted(() => {
   tickerTimer = setInterval(() => {
     liveIndex.value = (liveIndex.value + 1) % liveRates.length
@@ -52,10 +58,16 @@ onMounted(() => {
   trackerTimer = setInterval(() => {
     trackerIndex.value = trackerIndex.value < trackerSteps.length - 1 ? trackerIndex.value + 1 : 0
   }, 4000)
+  if (typeof window.matchMedia === 'function') {
+    motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    prefersReducedMotion.value = motionQuery.matches
+    motionQuery.addEventListener('change', onMotionChange)
+  }
 })
 onUnmounted(() => {
   clearInterval(tickerTimer)
   clearInterval(trackerTimer)
+  motionQuery?.removeEventListener('change', onMotionChange)
 })
 </script>
 
@@ -90,7 +102,20 @@ onUnmounted(() => {
           class="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 md:inset-y-0 md:left-auto md:right-0 md:h-full md:w-[58%]"
           aria-hidden="true"
         >
-          <img src="/hero-city.webp" alt="" class="h-full w-full object-cover" />
+          <video
+            v-if="!prefersReducedMotion"
+            class="h-full w-full object-cover"
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="auto"
+            poster="/hero-city.webp"
+            aria-hidden="true"
+          >
+            <source src="/kryptamo-hero.mp4" type="video/mp4" />
+          </video>
+          <img v-else src="/hero-city.webp" alt="" class="h-full w-full object-cover" />
           <div
             class="absolute inset-0 bg-gradient-to-b from-ink via-ink/35 to-ink/75 md:bg-gradient-to-r md:from-ink md:via-ink/50 md:to-transparent"
           ></div>

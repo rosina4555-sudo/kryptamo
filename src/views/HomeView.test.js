@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { nextTick } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { mount } from '@vue/test-utils'
 import HomeView from './HomeView.vue'
@@ -45,6 +46,30 @@ describe('HomeView', () => {
     const rendered = text()
     expect(rendered).toContain('Any African country to any African country.')
     expect(rendered).toContain('20 African countries')
+  })
+
+  it('plays the hero illustration video with a poster fallback', () => {
+    const wrapper = mountView()
+    const video = wrapper.find('video')
+    expect(video.exists()).toBe(true)
+    expect(video.attributes('autoplay')).toBeDefined()
+    expect(video.element.muted).toBe(true)
+    expect(video.attributes('loop')).toBeDefined()
+    expect(video.attributes('poster')).toBe('/hero-city.webp')
+    expect(video.find('source').attributes('src')).toBe('/kryptamo-hero.mp4')
+  })
+
+  it('falls back to the still image when reduced motion is preferred', async () => {
+    const original = window.matchMedia
+    window.matchMedia = () => ({ matches: true, addEventListener() {}, removeEventListener() {} })
+    try {
+      const wrapper = mountView()
+      await nextTick()
+      expect(wrapper.find('video').exists()).toBe(false)
+      expect(wrapper.find('img[src="/hero-city.webp"]').exists()).toBe(true)
+    } finally {
+      window.matchMedia = original
+    }
   })
 
   it('answers common questions in the FAQ', () => {
