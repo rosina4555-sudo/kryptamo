@@ -52,8 +52,7 @@ describe('SendView', () => {
 
   it('requotes when the send country changes', async () => {
     const { wrapper } = mountSend()
-    const kenya = wrapper.findAll('button').find((btn) => btn.text().includes('Kenya'))
-    await kenya.trigger('click')
+    await wrapper.get('#sender').setValue('KE')
     await wrapper.get('#handle').setValue('kwame')
     await vi.advanceTimersByTimeAsync(1200)
     await flushPromises()

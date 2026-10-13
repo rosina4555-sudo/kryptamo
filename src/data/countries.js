@@ -165,7 +165,7 @@ export const COUNTRIES = [
   },
 ]
 
-export const SEND_COUNTRY_CODES = ['NG', 'KE', 'CI', 'SN', 'CM', 'UG']
+export const SEND_COUNTRY_CODES = COUNTRIES.map((country) => country.code)
 
 const byCode = new Map(COUNTRIES.map((country) => [country.code, country]))
 

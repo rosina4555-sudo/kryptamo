@@ -244,23 +244,22 @@ watch(handle, watchHandle)
             <p class="text-xs font-semibold tracking-[0.16em] text-volta">AMOUNT</p>
             <h2 class="mt-3 font-display text-2xl font-semibold text-ink">How much are you sending?</h2>
 
-            <fieldset class="mt-5">
-              <legend class="text-sm font-medium text-ink">Send from</legend>
-              <div class="mt-2 flex flex-wrap gap-2">
-                <button
-                  v-for="option in senderOptions"
-                  :key="option.code"
-                  type="button"
-                  class="inline-flex items-center gap-2 rounded-control border-2 px-3 py-2 text-sm font-medium transition-colors"
-                  :class="senderCode === option.code ? 'border-volta bg-volta-tint/50 text-ink' : 'border-line bg-canvas text-slate hover:border-slate'"
-                  :aria-pressed="senderCode === option.code"
-                  @click="selectSender(option.code)"
+            <div class="mt-5">
+              <label for="sender" class="block text-sm font-medium text-ink">Send from</label>
+              <div class="mt-2 flex items-center gap-3 rounded-control border-2 border-line bg-canvas px-3 py-2.5 transition-colors focus-within:border-volta">
+                <FlagIcon :code="senderCode" class="h-5 w-7 shrink-0 rounded-[2px] ring-1 ring-black/5" />
+                <select
+                  id="sender"
+                  :value="senderCode"
+                  class="w-full appearance-none bg-transparent font-display text-base font-semibold text-ink outline-none"
+                  @change="selectSender($event.target.value)"
                 >
-                  <FlagIcon :code="option.code" class="h-4 w-6 rounded-[2px] ring-1 ring-black/5" />
-                  {{ option.name }}
-                </button>
+                  <option v-for="option in senderOptions" :key="option.code" :value="option.code">
+                    {{ option.name }} · {{ option.currency }}
+                  </option>
+                </select>
               </div>
-            </fieldset>
+            </div>
 
             <label for="amount" class="mt-6 block text-sm font-medium text-ink">Amount in {{ currency }}</label>
             <div class="mt-2 flex items-end gap-3 border-b-2 border-line pb-2 transition-colors focus-within:border-volta">

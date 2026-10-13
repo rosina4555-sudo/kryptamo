@@ -39,11 +39,17 @@ describe('HomeView', () => {
     expect(links).toContain('Send your first transfer')
   })
 
+  it('frames transfers as any-to-any across Africa', () => {
+    const rendered = text()
+    expect(rendered).toContain('Any African country to any African country.')
+    expect(rendered).toContain('20 African countries')
+  })
+
   it('itemizes the fee breakdown as free', () => {
     const rendered = text()
     expect(rendered).toContain('Platform fee')
     expect(rendered).toContain('Network fee')
-    expect(rendered).toContain('GH₵0.00')
+    expect(rendered).toContain('₦0.00')
     expect(rendered).toContain('Free')
   })
 

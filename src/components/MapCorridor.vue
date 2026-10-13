@@ -16,24 +16,31 @@ const project = ([lon, lat]) => [
   ((latMax - lat) / (latMax - latMin)) * viewH,
 ]
 
-const destination = { id: '288', label: 'Ghana', at: project([-1.2, 7.5]) }
-const sources = [
-  { id: '686', label: 'Senegal', at: project([-14.5, 14.5]), duration: '3.4s' },
-  { id: '384', label: 'Ivory Coast', at: project([-5.5, 7.5]), duration: '3s' },
-  { id: '566', label: 'Nigeria', at: project([8, 9]), duration: '2.6s' },
+const nodes = [
+  { id: '686', label: 'Senegal', at: project([-14.5, 14.5]), dy: -10 },
+  { id: '384', label: 'Ivory Coast', at: project([-5.5, 7.5]), dx: -8, dy: 4, anchor: 'end' },
+  { id: '566', label: 'Nigeria', at: project([8, 9]), dy: -12 },
+  { id: '288', label: 'Ghana', at: project([-1.2, 7.5]), dy: 18 },
 ]
 
-const destId = destination.id
-const sourceIds = new Set(sources.map((s) => s.id))
+const nodeById = Object.fromEntries(nodes.map((node) => [node.id, node]))
+const nodeIds = new Set(nodes.map((node) => node.id))
 
-const arcPath = (from, to, gap = 0) => {
+const corridors = [
+  { from: '686', to: '288', duration: '3.4s' },
+  { from: '384', to: '288', duration: '3s' },
+  { from: '566', to: '288', duration: '2.6s' },
+  { from: '288', to: '566', duration: '2.8s', bend: -0.24 },
+]
+
+const arcPath = (from, to, gap = 0, bend = 0.24) => {
   const [ax, ay] = from
   const [bx, by] = to
   const mx = (ax + bx) / 2
   const my = (ay + by) / 2
   const dist = Math.hypot(bx - ax, by - ay)
   const cx = mx
-  const cy = my - dist * 0.24
+  const cy = my - dist * bend
   if (!gap) {
     return `M${ax.toFixed(1)} ${ay.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${bx.toFixed(1)} ${by.toFixed(1)}`
   }
@@ -45,11 +52,16 @@ const arcPath = (from, to, gap = 0) => {
   return `M${ax.toFixed(1)} ${ay.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`
 }
 
-const routes = sources.map((s) => ({
-  ...s,
-  d: arcPath(s.at, destination.at),
-  base: arcPath(s.at, destination.at, 24),
-}))
+const routes = corridors.map(({ from, to, duration, bend }) => {
+  const a = nodeById[from].at
+  const b = nodeById[to].at
+  return {
+    key: `${from}-${to}`,
+    duration,
+    d: arcPath(a, b, 0, bend ?? 0.24),
+    base: arcPath(a, b, 24, bend ?? 0.24),
+  }
+})
 
 const graticuleLon = []
 for (let lon = -20; lon <= 20; lon += 10) graticuleLon.push(project([lon, latMin])[0])
@@ -63,7 +75,7 @@ for (let lat = 0; lat <= 60; lat += 10) graticuleLat.push(project([0, lat])[1])
       :viewBox="cropViewBox"
       class="w-full"
       role="img"
-      aria-label="A map of West Africa showing transfers routing from Senegal, Ivory Coast and Nigeria into Ghana"
+      aria-label="A map of West Africa showing Mobile Money transfers routing both ways between Senegal, Ivory Coast, Nigeria and Ghana"
     >
       <defs>
         <filter id="map-glow" x="-60%" y="-60%" width="220%" height="220%">
@@ -102,14 +114,12 @@ for (let lat = 0; lat <= 60; lat += 10) graticuleLat.push(project([0, lat])[1])
           v-for="country in MAP_COUNTRIES"
           :key="country.id"
           :d="country.d"
-          :class="
-            country.id === destId ? 'land-dest' : sourceIds.has(country.id) ? 'land-source' : 'land-base'
-          "
+          :class="nodeIds.has(country.id) ? 'land-node' : 'land-base'"
         />
       </g>
 
       <g class="routes">
-        <g v-for="route in routes" :key="route.id">
+        <g v-for="route in routes" :key="route.key">
           <path class="route-base" :d="route.base" marker-end="url(#map-arrow)" />
           <path
             v-if="animated"
@@ -122,59 +132,19 @@ for (let lat = 0; lat <= 60; lat += 10) graticuleLat.push(project([0, lat])[1])
       </g>
 
       <g class="markers">
-        <g v-for="source in sources" :key="`m-${source.id}`">
-          <circle :cx="source.at[0]" :cy="source.at[1]" r="6" class="marker-ring" />
-          <circle :cx="source.at[0]" :cy="source.at[1]" r="3" class="marker-source" />
+        <g v-for="node in nodes" :key="`m-${node.id}`">
+          <circle :cx="node.at[0]" :cy="node.at[1]" r="6" class="marker-ring" />
+          <circle :cx="node.at[0]" :cy="node.at[1]" r="3.2" class="marker-node" filter="url(#map-glow)" />
         </g>
-
-        <circle
-          :cx="destination.at[0]"
-          :cy="destination.at[1]"
-          r="4.5"
-          class="marker-dest"
-          filter="url(#map-glow)"
-        />
-        <circle
-          v-if="animated"
-          class="pulse"
-          :cx="destination.at[0]"
-          :cy="destination.at[1]"
-          r="4.5"
-          fill="none"
-          stroke="var(--color-delivered)"
-          stroke-width="1.5"
-        />
-        <circle
-          v-else
-          :cx="destination.at[0]"
-          :cy="destination.at[1]"
-          r="8"
-          fill="none"
-          stroke="rgba(27,127,75,0.5)"
-          stroke-width="1"
-        />
-
-        <text :x="sources[0].at[0]" :y="sources[0].at[1] - 10" class="map-label" text-anchor="middle">
-          Senegal
-        </text>
         <text
-          :x="sources[1].at[0] - 8"
-          :y="sources[1].at[1] + 4"
+          v-for="node in nodes"
+          :key="`label-${node.id}`"
+          :x="node.at[0] + (node.dx ?? 0)"
+          :y="node.at[1] + (node.dy ?? 0)"
           class="map-label"
-          text-anchor="end"
+          :text-anchor="node.anchor ?? 'middle'"
         >
-          Ivory Coast
-        </text>
-        <text :x="sources[2].at[0]" :y="sources[2].at[1] + 18" class="map-label" text-anchor="middle">
-          Nigeria
-        </text>
-        <text
-          :x="destination.at[0]"
-          :y="destination.at[1] - 12"
-          class="map-label map-label-dest"
-          text-anchor="middle"
-        >
-          Ghana
+          {{ node.label }}
         </text>
       </g>
     </svg>
@@ -182,12 +152,12 @@ for (let lat = 0; lat <= 60; lat += 10) graticuleLat.push(project([0, lat])[1])
     <div class="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-white/70">
       <span class="flex items-center gap-2.5">
         <span class="h-2 w-2 rounded-[2px] bg-white"></span>
-        Senegal · Ivory Coast · Nigeria
+        Senegal · Ivory Coast · Nigeria · Ghana
       </span>
       <ArrowRight :size="16" :stroke-width="1.5" class="text-white/40" />
       <span class="flex items-center gap-2.5">
         <span class="h-2 w-2 rounded-[2px] bg-delivered"></span>
-        Ghana · Mobile Money
+        Mobile Money both ways
       </span>
     </div>
   </div>
@@ -205,16 +175,10 @@ for (let lat = 0; lat <= 60; lat += 10) graticuleLat.push(project([0, lat])[1])
   stroke-width: 0.5;
 }
 
-.land-source {
-  fill: rgba(214, 230, 233, 0.26);
-  stroke: rgba(214, 230, 233, 0.5);
-  stroke-width: 0.75;
-}
-
-.land-dest {
-  fill: rgba(27, 127, 75, 0.55);
+.land-node {
+  fill: rgba(27, 127, 75, 0.5);
   stroke: var(--color-delivered);
-  stroke-width: 1;
+  stroke-width: 0.9;
 }
 
 .route-base {
@@ -260,47 +224,20 @@ for (let lat = 0; lat <= 60; lat += 10) graticuleLat.push(project([0, lat])[1])
   stroke-width: 1;
 }
 
-.marker-source {
+.marker-node {
   fill: #ffffff;
-}
-
-.marker-dest {
-  fill: var(--color-delivered);
-}
-
-.pulse {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: map-pulse 2.6s ease-out infinite;
-}
-
-@keyframes map-pulse {
-  0% {
-    transform: scale(1);
-    opacity: 0.85;
-  }
-  100% {
-    transform: scale(3);
-    opacity: 0;
-  }
 }
 
 .map-label {
   font-family: var(--font-ui);
   font-size: 14px;
   font-weight: 500;
-  fill: rgba(255, 255, 255, 0.75);
-}
-
-.map-label-dest {
-  fill: #ffffff;
-  font-weight: 600;
+  fill: rgba(255, 255, 255, 0.8);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .route-base,
-  .route-comet,
-  .pulse {
+  .route-comet {
     animation: none;
   }
 }

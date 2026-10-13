@@ -13,16 +13,17 @@ describe('MapCorridor', () => {
     expect(label).toContain('Ghana')
   })
 
-  it('highlights the three sources and the destination', () => {
+  it('highlights every country in the mesh', () => {
     const wrapper = mount(MapCorridor)
-    expect(wrapper.findAll('.land-source').length).toBe(3)
-    expect(wrapper.findAll('.land-dest').length).toBe(1)
+    expect(wrapper.findAll('.land-node').length).toBe(4)
+    expect(wrapper.findAll('.land-source').length).toBe(0)
+    expect(wrapper.findAll('.land-dest').length).toBe(0)
   })
 
-  it('draws one animated route into Ghana per source country', () => {
+  it('draws a two-way route per corridor', () => {
     const wrapper = mount(MapCorridor)
-    expect(wrapper.findAll('.route-comet').length).toBe(3)
-    expect(wrapper.findAll('.route-base').length).toBe(3)
+    expect(wrapper.findAll('.route-comet').length).toBe(4)
+    expect(wrapper.findAll('.route-base').length).toBe(4)
   })
 
   it('renders the projected land geometry', () => {
@@ -35,6 +36,6 @@ describe('MapCorridor', () => {
     const wrapper = mount(MapCorridor, { props: { animated: false } })
     expect(wrapper.findAll('.route-comet').length).toBe(0)
     expect(wrapper.find('.map-static').exists()).toBe(true)
-    expect(wrapper.findAll('[marker-end]').length).toBe(3)
+    expect(wrapper.findAll('[marker-end]').length).toBe(4)
   })
 })

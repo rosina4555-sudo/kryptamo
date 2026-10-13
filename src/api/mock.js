@@ -80,6 +80,22 @@ const recipients = {
     phone_number_masked: '+221 77 **** 502',
     momo_details: { network: 'Orange Money', account_name: 'AISSATOU DIALLO' },
   },
+  jamal: {
+    username: 'jamal',
+    recipient_id: 'usr_448711',
+    country: 'UG',
+    currency: 'UGX',
+    phone_number_masked: '+256 77 **** 318',
+    momo_details: { network: 'MTN MoMo', account_name: 'JAMAL OKOT' },
+  },
+  marie: {
+    username: 'marie',
+    recipient_id: 'usr_448802',
+    country: 'CM',
+    currency: 'XAF',
+    phone_number_masked: '+237 67 **** 190',
+    momo_details: { network: 'Orange Money', account_name: 'MARIE NGANOU' },
+  },
 }
 
 const inactiveWallets = new Set(['yaw'])
@@ -141,6 +157,18 @@ transfers.set(
     sourceCurrency: 'NGN',
     sourceCountry: 'NG',
     createdAt: '2026-10-11T14:35:41Z',
+  }),
+)
+transfers.set(
+  'txn_8832920120',
+  makeTransfer({
+    id: 'txn_8832920120',
+    status: 'PAID_OUT',
+    recipient: recipients.wanjiru,
+    sendAmount: 3000,
+    sourceCurrency: 'GHS',
+    sourceCountry: 'GH',
+    createdAt: '2026-10-10T16:40:00Z',
   }),
 )
 transfers.set(
@@ -378,7 +406,15 @@ export function resetMock() {
   idempotency.clear()
   gateways = 0
   for (const id of [...transfers.keys()]) {
-    if (!['txn_8832920192', 'txn_8832920100', 'txn_8832920055', 'txn_8832920044'].includes(id)) {
+    if (
+      ![
+        'txn_8832920192',
+        'txn_8832920120',
+        'txn_8832920100',
+        'txn_8832920055',
+        'txn_8832920044',
+      ].includes(id)
+    ) {
       transfers.delete(id)
     }
   }

@@ -83,6 +83,16 @@ describe('users.lookup', () => {
   it('reports an inactive Mobile Money wallet', async () => {
     await expect(users.lookup('yaw')).rejects.toMatchObject({ error_code: 'MOMO_LOOKUP_FAILED' })
   })
+
+  it('resolves recipients in any supported country', async () => {
+    const uganda = await users.lookup('jamal')
+    expect(uganda.country).toBe('UG')
+    expect(uganda.currency).toBe('UGX')
+
+    const cameroon = await users.lookup('marie')
+    expect(cameroon.country).toBe('CM')
+    expect(cameroon.currency).toBe('XAF')
+  })
 })
 
 describe('quotes.create', () => {
@@ -156,5 +166,12 @@ describe('transfers', () => {
     await expect(transfers.create({ quote_id: 'qte_missing' })).rejects.toMatchObject({
       error_code: 'QUOTE_EXPIRED',
     })
+  })
+
+  it('routes transfers from any country, including Ghana as a source', async () => {
+    const { transfers: list } = await transfers.list({ page: 1, limit: 20 })
+    const fromGhana = list.find((item) => item.source_currency === 'GHS')
+    expect(fromGhana).toBeTruthy()
+    expect(fromGhana.target_currency).toBe('KES')
   })
 })
