@@ -103,19 +103,16 @@ onUnmounted(() => {
           aria-hidden="true"
         >
           <video
-            v-if="!prefersReducedMotion"
             class="h-full w-full object-cover"
-            autoplay
+            :autoplay="!prefersReducedMotion"
             muted
             loop
             playsinline
             preload="auto"
-            poster="/hero-city.webp"
             aria-hidden="true"
           >
             <source src="/kryptamo-hero.mp4" type="video/mp4" />
           </video>
-          <img v-else src="/hero-city.webp" alt="" class="h-full w-full object-cover" />
           <div
             class="absolute inset-0 bg-gradient-to-b from-ink via-ink/35 to-ink/75 md:bg-gradient-to-r md:from-ink md:via-ink/50 md:to-transparent"
           ></div>
