@@ -15,9 +15,9 @@
   --color-notice-bg: #FFF1D6;
   --color-notice-text: #7A4A00;
 
-  --radius-control: 4px;
-  --radius-panel: 6px;
-  --radius-sheet: 0px;
+  --radius-control: 10px;
+  --radius-panel: 14px;
+  --radius-sheet: 18px;
 
   --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
   --font-ui: 'IBM Plex Sans', system-ui, sans-serif;
